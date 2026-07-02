@@ -60,11 +60,11 @@ export const authOptions: NextAuthOptions = {
 
         // If email is in ADMIN_EMAILS whitelist, auto-promote to admin
         if (isAdminEmail && user.role !== "admin") {
-          user = await User.findOneAndUpdate<IUserDocument>(
+          user = (await User.findOneAndUpdate<IUserDocument>(
             { email },
             { role: "admin", isApproved: true },
             { new: true },
-          ).select("+password");
+          ).select("+password")) as any;
         }
 
         // Lawyers not yet approved cannot log in
