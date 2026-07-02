@@ -39,8 +39,8 @@ export async function GET(req: NextRequest) {
       urgency:         matter.urgency,
       status:          matter.status,
       stage:           matter.stage,
-      submittedAt:     matter.createdAt,
-      lastUpdated:     matter.updatedAt,
+      submittedAt:     (matter as any).createdAt,
+      lastUpdated:     (matter as any).updatedAt,
     });
   } catch (err) {
     console.error("[TRACK]", err);
