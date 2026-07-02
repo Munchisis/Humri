@@ -1,7 +1,7 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { connectDB } from "@/lib/db";
-import User from "@/models/User";
+import User, { IUserDocument } from "@/models/User";
 
 // Comma-separated list of admin emails from .env.local
 // e.g. ADMIN_EMAILS=admin@lexgratis.ng,emuchay@gmail.com
@@ -60,10 +60,10 @@ export const authOptions: NextAuthOptions = {
 
         // If email is in ADMIN_EMAILS whitelist, auto-promote to admin
         if (isAdminEmail && user.role !== "admin") {
-          user = await User.findOneAndUpdate(
+          user = await User.findOneAndUpdate<IUserDocument>(
             { email },
             { role: "admin", isApproved: true },
-            { new: true }
+            { new: true },
           ).select("+password");
         }
 
