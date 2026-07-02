@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
           _id: string; name: string; email: string;
         };
         const daysSince = Math.floor(
-          (now.getTime() - matter.updatedAt.getTime()) / (24 * 60 * 60 * 1000)
+          (now.getTime() - (matter as any).updatedAt.getTime()) / (24 * 60 * 60 * 1000)
         );
 
         await sendStaleMatterReminder({
