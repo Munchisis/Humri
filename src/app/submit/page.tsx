@@ -164,10 +164,10 @@ export default function SubmitPage() {
     <div className="min-h-screen bg-gray-50  dark:bg-gray-900">
       <header className="bg-brand-900 px-6 py-4 flex items-center justify-between  dark:bg-gray-800">
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
+          <Link href="/" className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
             <Scale className="w-4 h-4 text-brand-900" />
-          </div>
-          <span className="text-sm font-semibold text-brand-50">HUMRI</span>
+          </Link>
+          <Link href="/" className="text-sm font-semibold text-brand-50">HUMRI</Link>
         </Link>
         <Link
           href="/track"

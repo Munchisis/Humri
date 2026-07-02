@@ -23,13 +23,13 @@ export function LawyerSidebar({ user }: Props) {
   return (
     <aside className="w-60 shrink-0 bg-gray-900 flex flex-col min-h-screen">
       <div className="flex items-center gap-3 px-5 py-5 border-b border-gray-800">
-        <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center shrink-0">
+        <Link href="/" className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center shrink-0">
           <Scale className="w-4 h-4 text-white" />
-        </div>
+        </Link>
         <div>
-          <div className="text-sm font-semibold text-white leading-none">
-            HumRi
-          </div>
+          <Link href="/" className="text-sm font-semibold text-white leading-none">
+            HUMRI
+          </Link>
           <div className="text-xs text-gray-400 mt-0.5">Lawyer portal</div>
         </div>
       </div>
