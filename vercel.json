@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/stale-matters",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/email-verification",
+      "schedule": "0 7 * * *"
+    }
+  ]
+}
