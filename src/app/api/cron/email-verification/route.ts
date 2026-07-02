@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
 
     for (const lawyer of unverified) {
       try {
-        const age = now.getTime() - lawyer.createdAt.getTime();
+        const age = now.getTime() - (lawyer.createdAt as Date).getTime();
 
         // Always ensure there's a valid verify token (generate fresh if expired)
         let token = lawyer.emailVerifyToken;
