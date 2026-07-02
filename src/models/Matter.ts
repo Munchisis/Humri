@@ -22,7 +22,6 @@ export interface IMatterDocument extends Document {
     authorName: string;
     content: string;
     createdAt: Date;
-    updatedAt: Date;
   }[];
   stageHistory: {
     stage: MatterStage;
