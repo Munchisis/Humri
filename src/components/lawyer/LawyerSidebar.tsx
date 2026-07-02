@@ -28,7 +28,7 @@ export function LawyerSidebar({ user }: Props) {
         </div>
         <div>
           <div className="text-sm font-semibold text-white leading-none">
-            Lex Gratis
+            HumRi
           </div>
           <div className="text-xs text-gray-400 mt-0.5">Lawyer portal</div>
         </div>
