@@ -104,7 +104,7 @@ function TrackForm() {
               <Scale className="w-4 h-4 text-brand-100" />
             </div>
             <span className="text-sm font-semibold text-gray-900 dark:text-gray-200">
-              HumRi
+              HUMRI
             </span>
           </Link>
           <Link

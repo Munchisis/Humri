@@ -87,7 +87,7 @@ export default function LawyerMattersPage() {
 
   return (
     <div>
-      <div className="mb-6">
+      <div className="mb-6 ">
         <h1 className="text-xl font-medium">My matters</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           {active.length} active · {completed.length} completed
@@ -96,15 +96,22 @@ export default function LawyerMattersPage() {
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
-        {([
-          { key: "active",    label: `Active (${active.length})`       },
-          { key: "completed", label: `Completed (${completed.length})` },
-        ] as { key: Tab; label: string }[]).map(({ key, label }) => (
-          <button key={key} onClick={() => setTab(key)}
-            className={"px-4 py-2 rounded-lg text-sm font-medium transition-all " +
+        {(
+          [
+            { key: "active", label: `Active (${active.length})` },
+            { key: "completed", label: `Completed (${completed.length})` },
+          ] as { key: Tab; label: string }[]
+        ).map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={
+              "px-4 py-2 rounded-lg text-sm font-medium transition-all " +
               (tab === key
                 ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
-                : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800")}>
+                : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800")
+            }
+          >
             {label}
           </button>
         ))}
@@ -117,17 +124,21 @@ export default function LawyerMattersPage() {
       ) : displayed.length === 0 ? (
         <div className="card text-center py-16">
           <p className="text-sm text-gray-400">
-            {tab === "active" ? "No active matters assigned to you." : "No completed matters yet."}
+            {tab === "active"
+              ? "No active matters assigned to you."
+              : "No completed matters yet."}
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           {displayed.map((m) => {
-            const stage      = m.stage as string;
-            const step       = stageStepMap[m.stage as MatterStage] ?? 1;
+            const stage = m.stage as string;
+            const step = stageStepMap[m.stage as MatterStage] ?? 1;
             const isUpdating = updating === m._id;
             const isReleasing = releasing === m._id;
-            const canRelease  = !BLOCKED_RELEASE_STAGES.includes(stage) && m.status !== "completed";
+            const canRelease =
+              !BLOCKED_RELEASE_STAGES.includes(stage) &&
+              m.status !== "completed";
 
             return (
               <div key={m._id} className="card">
@@ -140,18 +151,29 @@ export default function LawyerMattersPage() {
                     <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-2">
                       <span className="font-mono">{m.referenceNumber}</span>
                       <span>·</span>
-                      <span className="capitalize">{m.type.replace(/_/g, " ")}</span>
-                      {m.client.state && <><span>·</span><span>{m.client.state}</span></>}
+                      <span className="capitalize">
+                        {m.type.replace(/_/g, " ")}
+                      </span>
+                      {m.client.state && (
+                        <>
+                          <span>·</span>
+                          <span>{m.client.state}</span>
+                        </>
+                      )}
                     </div>
                     {tab === "active" && (
                       <div className="flex flex-wrap gap-3 mt-2">
-                        <a href={`mailto:${m.client.email}`}
-                          className="inline-flex items-center gap-1.5 text-xs text-brand-600 dark:text-brand-400 hover:underline">
+                        <a
+                          href={`mailto:${m.client.email}`}
+                          className="inline-flex items-center gap-1.5 text-xs text-brand-600 dark:text-brand-400 hover:underline"
+                        >
                           {m.client.email}
                         </a>
                         {m.client.phone && (
-                          <a href={`tel:${m.client.phone}`}
-                            className="inline-flex items-center gap-1.5 text-xs text-brand-600 dark:text-brand-400 hover:underline">
+                          <a
+                            href={`tel:${m.client.phone}`}
+                            className="inline-flex items-center gap-1.5 text-xs text-brand-600 dark:text-brand-400 hover:underline"
+                          >
                             {m.client.phone}
                           </a>
                         )}
@@ -160,7 +182,9 @@ export default function LawyerMattersPage() {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {m.urgency !== "normal" && (
-                      <span className={"badge text-xs " + urgencyStyles[m.urgency]}>
+                      <span
+                        className={"badge text-xs " + urgencyStyles[m.urgency]}
+                      >
                         {urgencyLabels[m.urgency]}
                       </span>
                     )}
@@ -180,26 +204,50 @@ export default function LawyerMattersPage() {
                   <>
                     <div className="mb-4">
                       <div className="flex justify-between text-xs text-gray-400 mb-1.5">
-                        <span>{MATTER_STAGES.find(s => s.value === stage)?.label ?? stage}</span>
-                        <span>{step} / {TOTAL_STAGES}</span>
+                        <span>
+                          {MATTER_STAGES.find((s) => s.value === stage)
+                            ?.label ?? stage}
+                        </span>
+                        <span>
+                          {step} / {TOTAL_STAGES}
+                        </span>
                       </div>
                       <div className="flex gap-1">
                         {MATTER_STAGES.map(({ value, step: s }) => (
-                          <div key={value}
-                            className={"flex-1 h-1.5 rounded-full " +
-                              (s < step ? "bg-brand-600" : s === step ? "bg-brand-300" : "bg-gray-100 dark:bg-gray-800")} />
+                          <div
+                            key={value}
+                            className={
+                              "flex-1 h-1.5 rounded-full " +
+                              (s < step
+                                ? "bg-brand-600"
+                                : s === step
+                                  ? "bg-brand-300"
+                                  : "bg-gray-100 dark:bg-gray-800")
+                            }
+                          />
                         ))}
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3 flex-wrap pt-3 border-t border-gray-100 dark:border-gray-800">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500 shrink-0">Stage:</span>
-                        <select className="input py-1 text-xs w-44" value={stage}
+                        <span className="text-xs text-gray-500 shrink-0">
+                          Stage:
+                        </span>
+                        <select
+                          className="input py-1 text-xs w-44"
+                          value={stage}
                           disabled={isUpdating}
-                          onChange={(e) => updateStage(m._id, e.target.value as MatterStage)}>
-                          {MATTER_STAGES.filter(s => s.value !== "completed").map(({ value, label }) => (
-                            <option key={value} value={value}>{label}</option>
+                          onChange={(e) =>
+                            updateStage(m._id, e.target.value as MatterStage)
+                          }
+                        >
+                          {MATTER_STAGES.filter(
+                            (s) => s.value !== "completed",
+                          ).map(({ value, label }) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
                           ))}
                         </select>
                       </div>
@@ -212,16 +260,22 @@ export default function LawyerMattersPage() {
                               setReleaseReason("");
                             }}
                             disabled={isUpdating}
-                            className="btn text-xs gap-1.5 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20">
+                            className="btn text-xs gap-1.5 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          >
                             <LogOut className="w-3.5 h-3.5" />
                             Release matter
                           </button>
                         )}
-                        <button onClick={() => markComplete(m._id)} disabled={isUpdating}
-                          className="btn btn-primary text-xs gap-1.5">
-                          {isUpdating
-                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            : <CheckCircle className="w-3.5 h-3.5" />}
+                        <button
+                          onClick={() => markComplete(m._id)}
+                          disabled={isUpdating}
+                          className="btn btn-primary text-xs gap-1.5"
+                        >
+                          {isUpdating ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <CheckCircle className="w-3.5 h-3.5" />
+                          )}
                           Mark complete
                         </button>
                       </div>
@@ -237,8 +291,9 @@ export default function LawyerMattersPage() {
                               Release this matter back to the open pool?
                             </p>
                             <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
-                              The matter will return to unassigned and another lawyer can claim it.
-                              The client will be notified. This cannot be undone.
+                              The matter will return to unassigned and another
+                              lawyer can claim it. The client will be notified.
+                              This cannot be undone.
                             </p>
                           </div>
                         </div>
@@ -251,21 +306,31 @@ export default function LawyerMattersPage() {
                           maxLength={500}
                         />
                         {releaseError && (
-                          <p className="text-xs text-red-600 dark:text-red-400 mb-2">{releaseError}</p>
+                          <p className="text-xs text-red-600 dark:text-red-400 mb-2">
+                            {releaseError}
+                          </p>
                         )}
                         <div className="flex gap-2">
                           <button
                             onClick={() => releaseMatter(m._id)}
                             disabled={isUpdating}
-                            className="btn btn-danger text-xs gap-1.5 flex-1 justify-center">
-                            {isUpdating
-                              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              : <LogOut className="w-3.5 h-3.5" />}
+                            className="btn btn-danger text-xs gap-1.5 flex-1 justify-center"
+                          >
+                            {isUpdating ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <LogOut className="w-3.5 h-3.5" />
+                            )}
                             Confirm release
                           </button>
                           <button
-                            onClick={() => { setReleasing(null); setReleaseReason(""); setReleaseError(""); }}
-                            className="btn text-xs">
+                            onClick={() => {
+                              setReleasing(null);
+                              setReleaseReason("");
+                              setReleaseError("");
+                            }}
+                            className="btn text-xs"
+                          >
                             Cancel
                           </button>
                         </div>
@@ -277,10 +342,15 @@ export default function LawyerMattersPage() {
                 {tab === "completed" && (
                   <div className="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-xs text-green-700 dark:text-green-400 font-medium">Resolved</span>
+                    <span className="text-xs text-green-700 dark:text-green-400 font-medium">
+                      Resolved
+                    </span>
                     <span className="text-xs text-gray-400 ml-auto">
-                      Last updated {new Date(m.updatedAt).toLocaleDateString("en-NG", {
-                        day: "numeric", month: "short", year: "numeric",
+                      Last updated{" "}
+                      {new Date(m.updatedAt).toLocaleDateString("en-NG", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
                       })}
                     </span>
                   </div>

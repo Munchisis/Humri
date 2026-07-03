@@ -11,6 +11,8 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "";
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const [email, setEmail]           = useState("");
   const [password, setPassword]     = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -43,17 +45,29 @@ function LoginForm() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center gap-3 justify-center mb-8">
-          <Link href="/" className="w-10 h-10 bg-brand-800 rounded-xl flex items-center justify-center">
+          <Link
+            href="/"
+            className="w-10 h-10 bg-brand-800 rounded-xl flex items-center justify-center"
+          >
             <Scale className="w-5 h-5 text-brand-100" />
           </Link>
           <div>
-            <Link href="/" className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-none">HUMRI</Link>
-            <div className="text-xs text-gray-400 tracking-wide uppercase mt-0.5">Pro bono legal aid</div>
+            <Link
+              href="/"
+              className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-none"
+            >
+              HUMRI
+            </Link>
+            <div className="text-xs text-gray-400 tracking-wide uppercase mt-0.5">
+              Pro bono legal aid
+            </div>
           </div>
         </div>
 
         <div className="card">
-          <h1 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-1">Sign in</h1>
+          <h1 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-1">
+            Sign in
+          </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
             Lawyer and admin access only.{" "}
             <Link href="/submit" className="text-brand-600 hover:underline">
@@ -85,19 +99,62 @@ function LoginForm() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="label mb-0">Password</label>
-                <Link href="/auth/forgot-password" className="text-xs text-brand-600 hover:underline">
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-xs text-brand-600 hover:underline"
+                >
                   Forgot password?
                 </Link>
               </div>
-              <input
-                type="password"
-                className="input"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="input pr-10"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -118,7 +175,9 @@ function LoginForm() {
               className="btn btn-primary w-full justify-center py-2.5 mt-2"
             >
               {loading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Signing in…</>
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Signing in…
+                </>
               ) : (
                 "Sign in"
               )}
@@ -128,7 +187,10 @@ function LoginForm() {
 
         <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-5">
           Volunteer lawyer?{" "}
-          <Link href="/auth/register" className="text-brand-600 hover:underline font-medium">
+          <Link
+            href="/auth/register"
+            className="text-brand-600 hover:underline font-medium"
+          >
             Apply to join →
           </Link>
         </p>

@@ -31,7 +31,7 @@ export function MobileSidebarWrapper({
       {/* Sidebar — hidden on mobile unless open */}
       <div
         className={`
-        fixed inset-y-0 left-0 z-50 lg:static lg:block
+        fixed inset-y-0 left-0 z-50
         transition-transform duration-200
         ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}

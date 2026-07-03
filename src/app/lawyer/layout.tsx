@@ -20,11 +20,13 @@ export default async function LawyerLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 ml-10">
       <MobileSidebarWrapper>
-         <LawyerSidebar user={session.user} />
+        <LawyerSidebar user={session.user} />
       </MobileSidebarWrapper>
-      <main className="flex-1 min-w-0 p-4 lg:p-8 pt-16 lg:pt-8">{children}</main>
+      <main className="flex-1 min-w-0 p-4 lg:pl-60 lg:p-8 pt-16 lg:pt-8 h-screen overflow-y-auto">
+        {children}
+      </main>
     </div>
   );
 }

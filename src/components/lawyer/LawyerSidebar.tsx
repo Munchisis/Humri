@@ -3,31 +3,45 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Scale, LayoutDashboard, FileText, LogOut, ChevronRight, LifeBuoy } from "lucide-react";
+import {
+  Scale,
+  LayoutDashboard,
+  FileText,
+  LogOut,
+  ChevronRight,
+  LifeBuoy,
+  Inbox,
+} from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
-import { ThemeToggle } from "../shared/themeToggle";
 
 interface Props {
   user: { name?: string | null; email?: string | null };
 }
 
 const nav = [
-  { href: "/lawyer",         label: "My dashboard", icon: LayoutDashboard },
-  { href: "/lawyer/matters", label: "My matters",   icon: FileText        },
-  { href: "/lawyer/support", label: "Contact admin", icon: LifeBuoy       },
+  { href: "/lawyer", label: "My dashboard", icon: LayoutDashboard },
+  { href: "/lawyer/pool", label: "Matter pool", icon: Inbox },
+  { href: "/lawyer/matters", label: "My matters", icon: FileText },
+  { href: "/lawyer/support", label: "Contact admin", icon: LifeBuoy },
 ];
 
 export function LawyerSidebar({ user }: Props) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-60 shrink-0 bg-gray-900 flex flex-col min-h-screen">
+    <aside className="w-60 h-screen shrink-0 bg-gray-900 flex flex-col">
       <div className="flex items-center gap-3 px-5 py-5 border-b border-gray-800">
-        <Link href="/" className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center shrink-0">
+        <Link
+          href="/"
+          className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center shrink-0"
+        >
           <Scale className="w-4 h-4 text-white" />
         </Link>
         <div>
-          <Link href="/" className="text-sm font-semibold text-white leading-none">
+          <Link
+            href="/"
+            className="text-sm font-semibold text-white leading-none"
+          >
             HUMRI
           </Link>
           <div className="text-xs text-gray-400 mt-0.5">Lawyer portal</div>
@@ -69,9 +83,6 @@ export function LawyerSidebar({ user }: Props) {
             </div>
             <div className="text-xs text-gray-500 truncate">{user.email}</div>
           </div>
-        </div>
-        <div className="w-fit px-3 mb-3">
-          <ThemeToggle />
         </div>
         <button
           onClick={() => signOut({ callbackUrl: "/auth/login" })}

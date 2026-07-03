@@ -11,11 +11,13 @@ import {
 import { urgencyStyles, urgencyLabels } from "@/lib/utils";
 import { MATTER_TYPES } from "@/types";
 import type { IMatter, MatterUrgency } from "@/types";
+import { useRouter } from "next/navigation";
 
 const URGENCY_OPTIONS: MatterUrgency[] = ["normal", "urgent", "critical"];
 
 export default function MatterPoolPage() {
   const [matters, setMatters] = useState<IMatter[]>([]);
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState<string | null>(null);
   const [claimed, setClaimed] = useState<string | null>(null);
@@ -23,17 +25,37 @@ export default function MatterPoolPage() {
   const [filterType, setFilterType] = useState("");
   const [filterUrgency, setFilterUrgency] = useState("");
 
+  // Add this state alongside the others
+  const [activeCount, setActiveCount] = useState(0);
+
+  // Update the load function to also fetch the lawyer's active matters
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ status: "unassigned" });
     if (filterType) params.set("type", filterType);
     if (filterUrgency) params.set("urgency", filterUrgency);
-    const res = await fetch("/api/matters?" + params);
-    const data = await res.json();
-    setMatters(data.matters ?? []);
+
+    const [poolRes, activeRes] = await Promise.all([
+      fetch("/api/matters?" + params),
+      fetch("/api/matters?limit=100"), // fetches lawyer's own assigned matters
+    ]);
+
+    const [poolData, activeData] = await Promise.all([
+      poolRes.json(),
+      activeRes.json(),
+    ]);
+
+    setMatters(poolData.matters ?? []);
+    setActiveCount(
+      (activeData.matters ?? []).filter(
+        (m: { status: string }) =>
+          m.status !== "unassigned" &&
+          m.status !== "completed" &&
+          m.status !== "archived",
+      ).length,
+    );
     setLoading(false);
   }, [filterType, filterUrgency]);
-
   useEffect(() => {
     load();
   }, [load]);
@@ -46,14 +68,17 @@ export default function MatterPoolPage() {
     });
     const data = await res.json();
     setClaiming(null);
+
     if (!res.ok) {
       setError(data.error);
       return;
     }
+
     setClaimed(matterId);
     setTimeout(() => {
       setClaimed(null);
       load();
+      router.refresh(); // Refresh the dashboard to reflect the claimed matter
     }, 1500);
   }
 
@@ -118,8 +143,36 @@ export default function MatterPoolPage() {
           <span className="ml-auto text-xs text-gray-400">
             {sorted.length} open matter{sorted.length !== 1 ? "s" : ""}
           </span>
+          <span
+            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+              activeCount >= 3
+                ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+            }`}
+          >
+            {activeCount}/3 active
+          </span>
         </div>
       </div>
+
+      {/* Capacity warning */}
+      {activeCount >= 3 && (
+        <div className="card mb-5 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                You have reached the 3-matter limit
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                To accept a new matter, complete or release one of your current
+                matters, or progress an existing matter to Document Review stage
+                or beyond.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-5">

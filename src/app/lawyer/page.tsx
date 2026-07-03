@@ -8,10 +8,12 @@ import { FileText, CheckCircle, Clock, ArrowRight } from "lucide-react";
 import { statusStyles, statusLabels, MATTER_STAGES, stageStepMap, TOTAL_STAGES } from "@/lib/utils";
 import type { MatterStatus, MatterStage } from "@/types";
 
+
 export default async function LawyerDashboard() {
   const session = await getServerSession(authOptions);
   await connectDB();
 
+  
   const [matters, profile] = await Promise.all([
     Matter.find({ assignedLawyer: session!.user.id })
       .sort({ urgency: -1, createdAt: -1 })

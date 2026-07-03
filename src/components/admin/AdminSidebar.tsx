@@ -4,8 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
-  Scale, LayoutDashboard, FileText,
-  Users, LogOut, ChevronRight,
+  Scale,
+  LayoutDashboard,
+  FileText,
+  Users,
+  LogOut,
+  ChevronRight,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { ThemeToggle } from "@/components/shared/themeToggle";
@@ -15,16 +19,16 @@ interface Props {
 }
 
 const nav = [
-  { href: "/admin",         label: "Dashboard",   icon: LayoutDashboard },
-  { href: "/admin/matters", label: "All matters",  icon: FileText        },
-  { href: "/admin/lawyers", label: "Lawyers",      icon: Users           },
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/matters", label: "All matters", icon: FileText },
+  { href: "/admin/lawyers", label: "Lawyers", icon: Users },
 ];
 
 export function AdminSidebar({ user }: Props) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-60 shrink-0 bg-brand-900 flex flex-col min-h-screen ">
+    <aside className="w-60 h-screen shrink-0 bg-brand-900 flex flex-col">
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-5 border-b border-brand-800">
         <Link
@@ -82,7 +86,7 @@ export function AdminSidebar({ user }: Props) {
             <div className="text-xs text-brand-400 truncate">{user.email}</div>
           </div>
         </div>
-        
+
         <div className="w-fit px-3 mb-3">
           <ThemeToggle />
         </div>
