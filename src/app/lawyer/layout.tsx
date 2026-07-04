@@ -20,7 +20,7 @@ export default async function LawyerLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 ml-10">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 ml-4">
       <MobileSidebarWrapper>
         <LawyerSidebar user={session.user} />
       </MobileSidebarWrapper>

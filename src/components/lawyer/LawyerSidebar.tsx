@@ -13,6 +13,7 @@ import {
   Inbox,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
+import { ThemeToggle } from "../shared/themeToggle";
 
 interface Props {
   user: { name?: string | null; email?: string | null };
@@ -84,6 +85,11 @@ export function LawyerSidebar({ user }: Props) {
             <div className="text-xs text-gray-500 truncate">{user.email}</div>
           </div>
         </div>
+
+        <div className="w-fit px-3 mb-3">
+          <ThemeToggle />
+        </div>
+
         <button
           onClick={() => signOut({ callbackUrl: "/auth/login" })}
           className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all"
