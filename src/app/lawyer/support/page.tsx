@@ -1,31 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { Loader2, CheckCircle, AlertCircle, Mail, ShieldAlert } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, Mail, ShieldAlert, Send, MailOpen } from "lucide-react";
+
+interface Message {
+  _id: string;
+  subject: string;
+  body: string;
+  status: "unread" | "read" | "resolved";
+  adminReply?: string;
+  repliedAt?: string;
+  createdAt: string;
+}
 
 export default function LawyerSupportPage() {
   const { data: session } = useSession();
-  const [subject, setSubject] = useState("");
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState("");
-  const [sent, setSent]       = useState(false);
+  const [subject, setSubject]   = useState("");
+  const [message, setMessage]   = useState("");
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
+  const [sent, setSent]         = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loadingMsgs, setLoadingMsgs] = useState(true);
+  const [selected, setSelected] = useState<Message | null>(null);
 
   const [resendLoading, setResendLoading] = useState(false);
   const [resendMessage, setResendMessage] = useState("");
 
   const emailVerified = (session?.user as Record<string, unknown> | undefined)?.emailVerified as boolean | undefined;
 
+  const loadMessages = useCallback(async () => {
+    setLoadingMsgs(true);
+    const res  = await fetch("/api/messages");
+    const data = await res.json();
+    setMessages(data.messages ?? []);
+    setLoadingMsgs(false);
+  }, []);
+
+  useEffect(() => { loadMessages(); }, [loadMessages]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    const res = await fetch("/api/lawyer/contact-admin", {
+    const res = await fetch("/api/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subject, message }),
+      body: JSON.stringify({ subject, body: message }),
     });
     const data = await res.json();
     setLoading(false);
@@ -34,6 +57,7 @@ export default function LawyerSupportPage() {
     setSent(true);
     setSubject("");
     setMessage("");
+    loadMessages();
   }
 
   async function resendVerification() {
@@ -45,15 +69,22 @@ export default function LawyerSupportPage() {
     setResendMessage(data.message ?? data.error ?? "");
   }
 
+  const statusStyles: Record<string, string> = {
+    unread:   "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800",
+    read:     "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400",
+    resolved: "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800",
+  };
+
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-3xl">
       <div className="mb-6">
         <h1 className="text-xl font-medium">Contact admin</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Reach out to the HUMRI admin team for support, questions, or to report an issue.
+          Send a message to the HUMRI admin team and track replies here.
         </p>
       </div>
 
+      {/* Email verification warning */}
       {emailVerified === false && (
         <div className="card mb-5 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
           <div className="flex items-start gap-3">
@@ -61,7 +92,7 @@ export default function LawyerSupportPage() {
             <div className="flex-1">
               <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Your email isn&apos;t verified yet</p>
               <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
-                Verify your email so we can reliably reach you with matter updates.
+                Verify your email so we can reliably reach you with matter updates and admin replies.
               </p>
               {resendMessage && (
                 <p className="text-xs text-amber-800 dark:text-amber-300 mt-2 font-medium">{resendMessage}</p>
@@ -76,18 +107,20 @@ export default function LawyerSupportPage() {
         </div>
       )}
 
-      <div className="card">
+      {/* Send new message */}
+      <div className="card mb-6">
+        <h2 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4">New message</h2>
+
         {sent ? (
-          <div className="text-center py-6">
-            <div className="w-14 h-14 bg-brand-50 dark:bg-brand-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-7 h-7 text-brand-600" />
+          <div className="text-center py-4">
+            <div className="w-12 h-12 bg-brand-50 dark:bg-brand-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+              <CheckCircle className="w-6 h-6 text-brand-600" />
             </div>
-            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Message sent</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
-              The admin team has been notified and will respond within 1-2 business days.
-              A confirmation has also been sent to your email.
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Message sent</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+              The admin team will respond within 1–2 business days. You can track the reply below.
             </p>
-            <button onClick={() => setSent(false)} className="btn text-sm">
+            <button onClick={() => setSent(false)} className="btn text-xs">
               Send another message
             </button>
           </div>
@@ -106,7 +139,7 @@ export default function LawyerSupportPage() {
             </div>
             <div>
               <label className="label">Message</label>
-              <textarea className="input" rows={6} required
+              <textarea className="input" rows={5} required
                 placeholder="Describe your question or issue in detail..."
                 value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000} />
               <div className="text-xs text-gray-400 mt-1 text-right">{message.length} / 2000</div>
@@ -115,10 +148,88 @@ export default function LawyerSupportPage() {
               {loading ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>
               ) : (
-                <><Mail className="w-4 h-4" /> Send to admin team</>
+                <><Send className="w-4 h-4" /> Send to admin team</>
               )}
             </button>
           </form>
+        )}
+      </div>
+
+      {/* Message history */}
+      <div>
+        <h2 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
+          Message history
+        </h2>
+
+        {loadingMsgs ? (
+          <div className="flex items-center justify-center py-10 text-gray-400 gap-3">
+            <Loader2 className="w-4 h-4 animate-spin" /> Loading messages…
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="card text-center py-10">
+            <MailOpen className="w-7 h-7 text-gray-300 mx-auto mb-2" />
+            <p className="text-sm text-gray-400">No messages sent yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {messages.map((msg) => (
+              <div key={msg._id}>
+                <button
+                  onClick={() => setSelected(selected?._id === msg._id ? null : msg)}
+                  className={"w-full text-left card hover:border-brand-300 dark:hover:border-brand-700 transition-all " +
+                    (selected?._id === msg._id ? "border-brand-400 dark:border-brand-600" : "")}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                          {msg.subject}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        Sent {new Date(msg.createdAt).toLocaleDateString("en-NG", {
+                          day: "numeric", month: "short", year: "numeric",
+                        })}
+                      </div>
+                    </div>
+                    <span className={"badge text-xs shrink-0 " + statusStyles[msg.status]}>
+                      {msg.status === "resolved" ? "Replied" : msg.status}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Expanded detail */}
+                {selected?._id === msg._id && (
+                  <div className="mt-2 ml-2 pl-4 border-l-2 border-gray-100 dark:border-gray-800 space-y-3">
+                    {/* Original message */}
+                    <div>
+                      <p className="text-xs font-medium text-gray-400 mb-1">Your message</p>
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                        {msg.body}
+                      </div>
+                    </div>
+
+                    {/* Admin reply */}
+                    {msg.adminReply ? (
+                      <div>
+                        <p className="text-xs font-medium text-brand-600 dark:text-brand-400 mb-1">
+                          Admin reply · {msg.repliedAt
+                            ? new Date(msg.repliedAt).toLocaleDateString("en-NG", { day: "numeric", month: "short" })
+                            : ""}
+                        </p>
+                        <div className="bg-brand-50 dark:bg-brand-900/20 border border-brand-200 dark:border-brand-800 rounded-lg p-3 text-sm text-brand-800 dark:text-brand-300 leading-relaxed whitespace-pre-wrap">
+                          {msg.adminReply}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-400 italic">
+                        Awaiting admin reply…
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
