@@ -101,7 +101,7 @@ export function AdminSidebar({ user }: Props) {
         </div>
         <button
           onClick={() => signOut({ callbackUrl: "/auth/login" })}
-          className="w-full flex items-center gap-3 px-3 py-2 text-sm text-brand-300 hover:text-brand-50 hover:bg-brand-800 rounded-lg transition-all"
+          className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white hover:text-brand-50 hover:bg-brand-800 rounded-lg transition-all"
         >
           <LogOut className="w-4 h-4" />
           Sign out

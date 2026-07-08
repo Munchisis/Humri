@@ -176,7 +176,7 @@ export default function CookiePolicyPage() {
         <LegalP>
           If you have questions about our use of cookies, please contact:<br />
           <strong>Email:</strong> privacy@humri.ng<br />
-          <strong>Platform:</strong> humri.vercel.app
+          <strong>Platform:</strong> https://humri.org/
         </LegalP>
       </LegalSection>
 
