@@ -1,8 +1,11 @@
 import { Resend } from "resend";
 
-const resend   = new Resend(process.env.RESEND_API_KEY);
-const FROM     = process.env.EMAIL_FROM ?? "HUMRI <onboarding@resend.dev>";
-const APP_URL  = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM = process.env.EMAIL_FROM ?? "HUMRI <onboarding@resend.dev>";
+const APP_URL =
+  process.env.NEXT_PUBLIC_APP_URL ??
+  process.env.NEXTAUTH_URL ??
+  "http://localhost:3000";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -46,16 +49,16 @@ export async function sendStaleMatterReminder({
   matterType,
   daysSinceAssigned,
 }: {
-  lawyerName:        string;
-  lawyerEmail:       string;
-  referenceNumber:   string;
-  clientName:        string;
-  matterType:        string;
+  lawyerName: string;
+  lawyerEmail: string;
+  referenceNumber: string;
+  clientName: string;
+  matterType: string;
   daysSinceAssigned: number;
 }) {
   await resend.emails.send({
-    from:    FROM,
-    to:      lawyerEmail,
+    from: FROM,
+    to: lawyerEmail,
     subject: `Action required: Matter ${referenceNumber} has been inactive for ${daysSinceAssigned} days`,
     html: wrap(`
       <p style="margin:0 0 16px">Dear <strong>${lawyerName}</strong>,</p>
@@ -96,14 +99,14 @@ export async function sendMatterAutoReleased({
   referenceNumber,
   matterType,
 }: {
-  lawyerName:      string;
-  lawyerEmail:     string;
+  lawyerName: string;
+  lawyerEmail: string;
   referenceNumber: string;
-  matterType:      string;
+  matterType: string;
 }) {
   await resend.emails.send({
-    from:    FROM,
-    to:      lawyerEmail,
+    from: FROM,
+    to: lawyerEmail,
     subject: `Matter ${referenceNumber} has been released back to the pool`,
     html: wrap(`
       <p style="margin:0 0 16px">Dear <strong>${lawyerName}</strong>,</p>
@@ -131,13 +134,13 @@ export async function sendClientMatterReassigning({
   clientEmail,
   referenceNumber,
 }: {
-  clientName:      string;
-  clientEmail:     string;
+  clientName: string;
+  clientEmail: string;
   referenceNumber: string;
 }) {
   await resend.emails.send({
-    from:    FROM,
-    to:      clientEmail,
+    from: FROM,
+    to: clientEmail,
     subject: `Update on your matter ${referenceNumber}`,
     html: wrap(`
       <p style="margin:0 0 16px">Dear <strong>${clientName}</strong>,</p>
@@ -169,23 +172,24 @@ export async function sendAdminMatterReleased({
   reason,
   isAutomatic,
 }: {
-  adminEmail:      string;
-  lawyerName:      string;
+  adminEmail: string;
+  lawyerName: string;
   referenceNumber: string;
-  clientName:      string;
-  matterType:      string;
-  reason:          string;
-  isAutomatic:     boolean;
+  clientName: string;
+  matterType: string;
+  reason: string;
+  isAutomatic: boolean;
 }) {
   await resend.emails.send({
-    from:    FROM,
-    to:      adminEmail,
+    from: FROM,
+    to: adminEmail,
     subject: `${isAutomatic ? "[Auto-release]" : "[Lawyer release]"} Matter ${referenceNumber} returned to pool`,
     html: wrap(`
       <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
-        ${isAutomatic
-          ? `Matter <strong>${referenceNumber}</strong> has been <strong>automatically released</strong> back to the open pool after 7 days of inactivity by ${lawyerName}.`
-          : `<strong>${lawyerName}</strong> has voluntarily released matter <strong>${referenceNumber}</strong> back to the open pool.`
+        ${
+          isAutomatic
+            ? `Matter <strong>${referenceNumber}</strong> has been <strong>automatically released</strong> back to the open pool after 7 days of inactivity by ${lawyerName}.`
+            : `<strong>${lawyerName}</strong> has voluntarily released matter <strong>${referenceNumber}</strong> back to the open pool.`
         }
       </p>
       <div style="background:#F9FAFB;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin:24px 0">
@@ -212,15 +216,15 @@ export async function sendEmailVerificationReminder({
   email,
   token,
 }: {
-  name:  string;
+  name: string;
   email: string;
   token: string;
 }) {
   const verifyUrl = `${APP_URL}/auth/verify-email?token=${token}`;
 
   await resend.emails.send({
-    from:    FROM,
-    to:      email,
+    from: FROM,
+    to: email,
     subject: "Reminder: Please verify your HUMRI email address",
     html: wrap(`
       <p style="margin:0 0 16px">Dear <strong>${name}</strong>,</p>
@@ -248,15 +252,15 @@ export async function sendEmailVerificationSuspension({
   email,
   token,
 }: {
-  name:  string;
+  name: string;
   email: string;
   token: string;
 }) {
   const verifyUrl = `${APP_URL}/auth/verify-email?token=${token}`;
 
   await resend.emails.send({
-    from:    FROM,
-    to:      email,
+    from: FROM,
+    to: email,
     subject: "Your HUMRI account has been suspended — action required",
     html: wrap(`
       <p style="margin:0 0 16px">Dear <strong>${name}</strong>,</p>

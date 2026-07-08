@@ -1,8 +1,11 @@
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM   = process.env.EMAIL_FROM ?? "HUMRI <onboarding@resend.dev>";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const FROM = process.env.EMAIL_FROM ?? "HUMRI <onboarding@resend.dev>";
+const APP_URL =
+  process.env.NEXT_PUBLIC_APP_URL ??
+  process.env.NEXTAUTH_URL ??
+  "http://localhost:3000";
 
 // ─── Password reset email ─────────────────────────────────────────────────────
 
@@ -11,15 +14,15 @@ export async function sendPasswordReset({
   email,
   token,
 }: {
-  name:  string;
+  name: string;
   email: string;
   token: string;
 }) {
   const resetUrl = `${APP_URL}/auth/reset-password?token=${token}`;
 
   await resend.emails.send({
-    from:    FROM,
-    to:      email,
+    from: FROM,
+    to: email,
     subject: "Reset your HUMRI password",
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
@@ -57,15 +60,15 @@ export async function sendEmailVerification({
   email,
   token,
 }: {
-  name:  string;
+  name: string;
   email: string;
   token: string;
 }) {
   const verifyUrl = `${APP_URL}/auth/verify-email?token=${token}`;
 
   await resend.emails.send({
-    from:    FROM,
-    to:      email,
+    from: FROM,
+    to: email,
     subject: "Verify your HUMRI email address",
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
@@ -106,17 +109,17 @@ export async function sendLawyerSupportRequest({
   subject,
   message,
 }: {
-  adminEmail:  string;
-  lawyerName:  string;
+  adminEmail: string;
+  lawyerName: string;
   lawyerEmail: string;
-  subject:     string;
-  message:     string;
+  subject: string;
+  message: string;
 }) {
   await resend.emails.send({
-    from:     FROM,
-    to:       adminEmail,
-    replyTo:  lawyerEmail,
-    subject:  `[Support] ${subject}`,
+    from: FROM,
+    to: adminEmail,
+    replyTo: lawyerEmail,
+    subject: `[Support] ${subject}`,
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
         <div style="background:#085041;padding:24px 32px;border-radius:12px 12px 0 0">
@@ -146,13 +149,13 @@ export async function sendLawyerSupportConfirmation({
   lawyerEmail,
   subject,
 }: {
-  lawyerName:  string;
+  lawyerName: string;
   lawyerEmail: string;
-  subject:     string;
+  subject: string;
 }) {
   await resend.emails.send({
-    from:    FROM,
-    to:      lawyerEmail,
+    from: FROM,
+    to: lawyerEmail,
     subject: "We received your message — HUMRI Support",
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">

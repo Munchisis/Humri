@@ -2,6 +2,7 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM   = process.env.EMAIL_FROM ?? "HumRi <onboarding@resend.dev>";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
 // ─── Matter submitted (to client) ────────────────────────────────────────────
 export async function sendMatterSubmitted({
