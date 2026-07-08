@@ -1,8 +1,11 @@
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM   = process.env.EMAIL_FROM ?? "HumRi <onboarding@resend.dev>";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+const FROM = process.env.EMAIL_FROM ?? "HumRi <onboarding@resend.dev>";
+const APP_URL =
+  process.env.NEXT_PUBLIC_APP_URL ??
+  process.env.NEXTAUTH_URL ??
+  "http://localhost:3000";
 
 // ─── Matter submitted (to client) ────────────────────────────────────────────
 export async function sendMatterSubmitted({
@@ -11,14 +14,14 @@ export async function sendMatterSubmitted({
   referenceNumber,
   matterType,
 }: {
-  clientName:      string;
-  clientEmail:     string;
+  clientName: string;
+  clientEmail: string;
   referenceNumber: string;
-  matterType:      string;
+  matterType: string;
 }) {
   await resend.emails.send({
-    from:    FROM,
-    to:      clientEmail,
+    from: FROM,
+    to: clientEmail,
     subject: `Your matter has been received — ${referenceNumber}`,
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
@@ -42,7 +45,7 @@ export async function sendMatterSubmitted({
             A qualified volunteer lawyer will be assigned to your matter within 72 hours.
             You will receive another email once a lawyer has been assigned.
           </p>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/track?ref=${referenceNumber}"
+          <a href="${APP_URL}/track?ref=${referenceNumber}"
             style="display:inline-block;background:#085041;color:#E1F5EE;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500;font-size:14px">
             Track your matter →
           </a>
@@ -64,15 +67,15 @@ export async function sendLawyerAssigned({
   lawyerName,
   lawyerSpecialisation,
 }: {
-  clientName:           string;
-  clientEmail:          string;
-  referenceNumber:      string;
-  lawyerName:           string;
+  clientName: string;
+  clientEmail: string;
+  referenceNumber: string;
+  lawyerName: string;
   lawyerSpecialisation: string;
 }) {
   await resend.emails.send({
-    from:    FROM,
-    to:      clientEmail,
+    from: FROM,
+    to: clientEmail,
     subject: `A lawyer has been assigned to your matter — ${referenceNumber}`,
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
@@ -95,7 +98,7 @@ export async function sendLawyerAssigned({
             Your lawyer will contact you directly to arrange a consultation.
             In the meantime you can track your matter status below.
           </p>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/track?ref=${referenceNumber}"
+          <a href="${APP_URL}/track?ref=${referenceNumber}"
             style="display:inline-block;background:#085041;color:#E1F5EE;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500;font-size:14px">
             Track your matter →
           </a>
@@ -116,14 +119,14 @@ export async function sendMatterCompleted({
   referenceNumber,
   lawyerName,
 }: {
-  clientName:      string;
-  clientEmail:     string;
+  clientName: string;
+  clientEmail: string;
   referenceNumber: string;
-  lawyerName:      string;
+  lawyerName: string;
 }) {
   await resend.emails.send({
-    from:    FROM,
-    to:      clientEmail,
+    from: FROM,
+    to: clientEmail,
     subject: `Your matter has been resolved — ${referenceNumber}`,
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
@@ -141,7 +144,7 @@ export async function sendMatterCompleted({
             We hope HumRi was able to help you. If you have a new legal matter in the future,
             do not hesitate to submit again — our volunteer lawyers are always here to help.
           </p>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/submit"
+          <a href="${APP_URL}/submit"
             style="display:inline-block;background:#085041;color:#E1F5EE;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500;font-size:14px">
             Submit a new matter
           </a>
@@ -163,15 +166,15 @@ export async function sendAdminNewMatter({
   matterType,
   urgency,
 }: {
-  adminEmail:      string;
+  adminEmail: string;
   referenceNumber: string;
-  clientName:      string;
-  matterType:      string;
-  urgency:         string;
+  clientName: string;
+  matterType: string;
+  urgency: string;
 }) {
   await resend.emails.send({
-    from:    FROM,
-    to:      adminEmail,
+    from: FROM,
+    to: adminEmail,
     subject: `New matter submitted — ${referenceNumber} ${urgency === "critical" ? "⚡ CRITICAL" : urgency === "urgent" ? "🕐 Urgent" : ""}`,
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
@@ -186,7 +189,7 @@ export async function sendAdminNewMatter({
             <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Matter type</td><td style="padding:8px 0">${matterType}</td></tr>
             <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Urgency</td><td style="padding:8px 0;font-weight:500;color:${urgency === "critical" ? "#dc2626" : urgency === "urgent" ? "#d97706" : "#16a34a"}">${urgency.charAt(0).toUpperCase() + urgency.slice(1)}</td></tr>
           </table>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/matters"
+          <a href="${APP_URL}/admin/matters"
             style="display:inline-block;background:#085041;color:#E1F5EE;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500;font-size:14px">
             View in admin panel →
           </a>
@@ -201,12 +204,12 @@ export async function sendLawyerApproved({
   lawyerName,
   lawyerEmail,
 }: {
-  lawyerName:  string;
+  lawyerName: string;
   lawyerEmail: string;
 }) {
   await resend.emails.send({
-    from:    FROM,
-    to:      lawyerEmail,
+    from: FROM,
+    to: lawyerEmail,
     subject: "Your HumRi account has been approved",
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
@@ -220,7 +223,7 @@ export async function sendLawyerApproved({
             Welcome to HumRi. Your volunteer lawyer account has been approved and
             you can now sign in to browse and accept matters from clients.
           </p>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/auth/login"
+          <a href="${APP_URL}/auth/login"
             style="display:inline-block;background:#085041;color:#E1F5EE;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500;font-size:14px">
             Sign in to your account →
           </a>
