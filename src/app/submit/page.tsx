@@ -347,6 +347,7 @@ export default function SubmitPage() {
               {/* Consent Box Section */}
               <div className="border-t border-gray-100 pt-4 dark:border-gray-800 space-y-2">
                 <div className="flex items-start gap-2.5 text-sm text-gray-600 dark:text-gray-300">
+                 
                   {/* The Checkbox element */}
                   <input
                     type="checkbox"
