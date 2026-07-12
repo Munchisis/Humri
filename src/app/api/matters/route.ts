@@ -150,13 +150,24 @@ export async function GET(req: NextRequest) {
 
     if (session.user.role === "lawyer") {
       if (status) {
+        // Lawyer explicitly requesting specific status (e.g., unassigned for pool)
         query.status = status;
+        if (status === "unassigned") {
+          query.assignedLawyer = null;
+        }
       } else {
+        // Lawyer viewing their own assigned matters
         query.assignedLawyer = new mongoose.Types.ObjectId(session.user.id);
       }
+    } else {
+      // Admin viewing matters
+      if (status) {
+        query.status = status;
+        if (status === "unassigned") {
+          query.assignedLawyer = null;
+        }
+      }
     }
-
-    if (status && session.user.role !== "lawyer") query.status = status;
     if (type) query.type = type;
     if (urgency) query.urgency = urgency;
 

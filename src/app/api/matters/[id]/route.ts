@@ -29,12 +29,16 @@ export async function GET(
       return NextResponse.json({ error: "Matter not found." }, { status: 404 });
     }
 
-    // Lawyers can only view matters assigned to them
-    if (
-      session.user.role === "lawyer" &&
-      matter.assignedLawyer?.toString() !== session.user.id
-    ) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // Lawyers can view matters assigned to them, and unassigned matters in the pool
+    if (session.user.role === "lawyer") {
+      const assignedId = matter.assignedLawyer
+  ? (typeof matter.assignedLawyer === "object" && matter.assignedLawyer !== null
+      ? (matter.assignedLawyer as any)._id?.toString()
+      : String(matter.assignedLawyer)) // Safely forces any primitive/ObjectId to string
+  : null;
+      if (assignedId && assignedId !== session.user.id) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
     }
 
     return NextResponse.json({ matter });
@@ -162,6 +166,15 @@ export async function PATCH(
             $inc: { activeMatters: -1, completedMatters: 1 },
           });
         }
+      } else if (status === "unassigned") {
+        // Remove assignment and reset stage when marked as unassigned
+        if (matter.assignedLawyer) {
+          await User.findByIdAndUpdate(matter.assignedLawyer, {
+            $inc: { activeMatters: -1 },
+          });
+        }
+        matter.assignedLawyer = undefined;
+        matter.stage = "intake";
       }
     }
 

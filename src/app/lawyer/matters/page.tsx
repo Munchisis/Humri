@@ -6,7 +6,8 @@ import {
   statusStyles, statusLabels, urgencyStyles, urgencyLabels,
   stageStepMap, MATTER_STAGES, TOTAL_STAGES,
 } from "@/lib/utils";
-import type { IMatter, MatterStatus, MatterStage } from "@/types";
+import type { IMatter, MatterStage } from "@/types";
+import Link from "next/link";
 
 // Stages where release is not allowed
 const BLOCKED_RELEASE_STAGES = ["hearing", "awaiting_judgment", "completed"];
@@ -130,7 +131,11 @@ export default function LawyerMattersPage() {
             const canRelease  = !BLOCKED_RELEASE_STAGES.includes(stage) && m.status !== "completed";
 
             return (
-              <div key={m._id} className="card">
+              <Link
+                href={`/lawyer/matters/${m._id}`}
+                key={m._id}
+                className="block card hover:border-brand-300 dark:hover:border-brand-700 transition-all cursor-pointer"
+              >
                 {/* Header */}
                 <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-4 mb-4">
                   <div>
@@ -229,9 +234,10 @@ export default function LawyerMattersPage() {
                           className="input py-1 text-xs w-44"
                           value={stage}
                           disabled={isUpdating}
-                          onChange={(e) =>
-                            updateStage(m._id, e.target.value as MatterStage)
-                          }
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            updateStage(m._id, e.target.value as MatterStage);
+                          }}
                         >
                           {MATTER_STAGES.filter(
                             (s) => s.value !== "completed",
@@ -245,7 +251,8 @@ export default function LawyerMattersPage() {
                       <div className="flex items-center gap-2 ml-auto">
                         {canRelease && (
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setReleasing(isReleasing ? null : m._id);
                               setReleaseError("");
                               setReleaseReason("");
@@ -293,6 +300,7 @@ export default function LawyerMattersPage() {
                           rows={3}
                           placeholder="Please explain why you are releasing this matter (min. 20 characters)..."
                           value={releaseReason}
+                          onClick={(e) => e.stopPropagation()}
                           onChange={(e) => setReleaseReason(e.target.value)}
                           maxLength={500}
                         />
@@ -346,7 +354,7 @@ export default function LawyerMattersPage() {
                     </span>
                   </div>
                 )}
-              </div>
+              </Link>
             );
           })}
         </div>

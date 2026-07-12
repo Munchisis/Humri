@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import {
   Scale, LayoutDashboard, FileText,
-  Users, LogOut, ChevronRight, MessageSquare,
+  Users, LogOut, ChevronRight, MessageSquare, Settings,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { ThemeToggle } from "@/components/shared/themeToggle";
@@ -16,14 +16,15 @@ interface Props {
 }
 
 const nav = [
-  { href: "/admin",          label: "Dashboard",   icon: LayoutDashboard },
-  { href: "/admin/matters",  label: "All matters",  icon: FileText        },
-  { href: "/admin/lawyers",  label: "Lawyers",      icon: Users           },
-  { href: "/admin/messages", label: "Messages",     icon: MessageSquare   },
+  { href: "/admin",           label: "Dashboard",   icon: LayoutDashboard },
+  { href: "/admin/matters",   label: "All matters",  icon: FileText        },
+  { href: "/admin/lawyers",   label: "Lawyers",      icon: Users           },
+  { href: "/admin/messages",  label: "Messages",     icon: MessageSquare   },
+  { href: "/admin/settings",  label: "Settings",     icon: Settings        },
 ];
 
 export function AdminSidebar({ user }: Props) {
-  const pathname = usePathname();
+  const pathname     = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -32,19 +33,15 @@ export function AdminSidebar({ user }: Props) {
         const res  = await fetch("/api/messages?status=unread");
         const data = await res.json();
         setUnreadCount((data.messages ?? []).length);
-      } catch {
-        // silently fail — sidebar badge is non-critical
-      }
+      } catch { /* non-critical */ }
     }
     fetchUnread();
-    // Poll every 60 seconds for new messages
     const interval = setInterval(fetchUnread, 60_000);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <aside className="w-60 shrink-0 bg-brand-900 flex flex-col min-h-screen">
-      {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-5 border-b border-brand-800">
         <Link href="/" className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center shrink-0">
           <Scale className="w-4 h-4 text-brand-900" />
@@ -55,22 +52,18 @@ export function AdminSidebar({ user }: Props) {
         </div>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 py-4 px-3 space-y-0.5">
         {nav.map(({ href, label, icon: Icon }) => {
-          const active  = pathname === href || (href !== "/admin" && pathname.startsWith(href));
-          const isMessages = href === "/admin/messages";
+          const active      = pathname === href || (href !== "/admin" && pathname.startsWith(href));
+          const isMessages  = href === "/admin/messages";
           return (
-            <Link
-              key={href}
-              href={href}
+            <Link key={href} href={href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all",
                 active
-                  ? "bg-brand-800 text-brand-50 font-medium "
-                  : "text-zinc-100 hover:bg-brand-800 hover:text-brand-50 dark:text-zinc-300 ",
-              )}
-            >
+                  ? "bg-brand-800 text-brand-50 font-medium"
+                  : "text-gray-100 hover:bg-brand-800 hover:text-brand-50"
+              )}>
               <Icon className="w-4 h-4 shrink-0" />
               {label}
               {isMessages && unreadCount > 0 && (
@@ -78,14 +71,14 @@ export function AdminSidebar({ user }: Props) {
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
-              {active && !isMessages && <ChevronRight className="w-3 h-3 ml-auto" />}
-              {active && isMessages && unreadCount === 0 && <ChevronRight className="w-3 h-3 ml-auto" />}
+              {active && !(isMessages && unreadCount > 0) && (
+                <ChevronRight className="w-3 h-3 ml-auto" />
+              )}
             </Link>
           );
         })}
       </nav>
 
-      {/* User + theme + sign out */}
       <div className="px-3 py-4 border-t border-brand-800">
         <div className="flex items-center gap-3 px-3 py-2 mb-2">
           <div className="w-7 h-7 rounded-full bg-brand-400 flex items-center justify-center text-xs font-medium text-brand-900 shrink-0">
@@ -99,10 +92,8 @@ export function AdminSidebar({ user }: Props) {
         <div className="w-fit px-3 mb-2">
           <ThemeToggle />
         </div>
-        <button
-          onClick={() => signOut({ callbackUrl: "/auth/login" })}
-          className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white hover:text-brand-50 hover:bg-brand-800 rounded-lg transition-all"
-        >
+        <button onClick={() => signOut({ callbackUrl: "/auth/login" })}
+          className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-brand-50 hover:bg-brand-800 rounded-lg transition-all">
           <LogOut className="w-4 h-4" />
           Sign out
         </button>

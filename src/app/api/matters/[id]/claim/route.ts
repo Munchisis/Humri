@@ -9,7 +9,7 @@ import { sendLawyerAssigned } from "@/lib/email";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "lawyer") {
@@ -23,30 +23,34 @@ export async function POST(
     return NextResponse.json({ error: "Matter not found." }, { status: 404 });
   }
 
-  if (matter.assignedLawyer) {
+  if (matter.assignedLawyer || matter.status !== "unassigned") {
     return NextResponse.json(
       { error: "This matter has already been claimed by another lawyer." },
-      { status: 409 }
+      { status: 409 },
     );
   }
 
-  matter.assignedLawyer = new mongoose.Types.ObjectId(session.user.id) as unknown as typeof matter.assignedLawyer;
+  matter.assignedLawyer = new mongoose.Types.ObjectId(
+    session.user.id,
+  ) as unknown as typeof matter.assignedLawyer;
   matter.status = "assigned";
-  matter.stage  = "client_consultation";
+  matter.stage = "client_consultation";
   await matter.save();
 
   try {
-  const lawyer = await User.findById(session.user.id).select("name specialisation").lean();
-  await sendLawyerAssigned({
-    clientName:           `${matter.client.firstName} ${matter.client.lastName}`,
-    clientEmail:          matter.client.email,
-    referenceNumber:      matter.referenceNumber,
-    lawyerName:           lawyer?.name ?? "Your lawyer",
-    lawyerSpecialisation: lawyer?.specialisation ?? "",
-  });
-} catch (err) {
-  console.error("[EMAIL]", err);
-}
+    const lawyer = await User.findById(session.user.id)
+      .select("name specialisation")
+      .lean();
+    await sendLawyerAssigned({
+      clientName: `${matter.client.firstName} ${matter.client.lastName}`,
+      clientEmail: matter.client.email,
+      referenceNumber: matter.referenceNumber,
+      lawyerName: lawyer?.name ?? "Your lawyer",
+      lawyerSpecialisation: lawyer?.specialisation ?? "",
+    });
+  } catch (err) {
+    console.error("[EMAIL]", err);
+  }
 
   await User.findByIdAndUpdate(session.user.id, {
     $inc: { activeMatters: 1 },
