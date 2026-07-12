@@ -1,13 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2, CheckCircle, LogOut, AlertTriangle } from "lucide-react";
 import {
-  statusStyles, statusLabels, urgencyStyles, urgencyLabels,
-  stageStepMap, MATTER_STAGES, TOTAL_STAGES,
+  statusStyles,
+  statusLabels,
+  urgencyStyles,
+  urgencyLabels,
+  stageStepMap,
+  MATTER_STAGES,
+  TOTAL_STAGES,
 } from "@/lib/utils";
 import type { IMatter, MatterStage } from "@/types";
-import Link from "next/link";
 
 // Stages where release is not allowed
 const BLOCKED_RELEASE_STAGES = ["hearing", "awaiting_judgment", "completed"];
@@ -15,23 +20,25 @@ const BLOCKED_RELEASE_STAGES = ["hearing", "awaiting_judgment", "completed"];
 type Tab = "active" | "completed";
 
 export default function LawyerMattersPage() {
-  const [matters, setMatters]     = useState<IMatter[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [tab, setTab]             = useState<Tab>("active");
-  const [updating, setUpdating]   = useState<string | null>(null);
+  const [matters, setMatters] = useState<IMatter[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<Tab>("active");
+  const [updating, setUpdating] = useState<string | null>(null);
   const [releasing, setReleasing] = useState<string | null>(null); // matterId being released
   const [releaseReason, setReleaseReason] = useState("");
-  const [releaseError, setReleaseError]   = useState("");
+  const [releaseError, setReleaseError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res  = await fetch("/api/matters?limit=100");
+    const res = await fetch("/api/matters?limit=100");
     const data = await res.json();
     setMatters(data.matters ?? []);
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   async function updateStage(matterId: string, stage: MatterStage) {
     setUpdating(matterId);
@@ -58,12 +65,14 @@ export default function LawyerMattersPage() {
   async function releaseMatter(matterId: string) {
     setReleaseError("");
     if (releaseReason.trim().length < 20) {
-      setReleaseError("Please provide at least 20 characters explaining why you are releasing this matter.");
+      setReleaseError(
+        "Please provide at least 20 characters explaining why you are releasing this matter.",
+      );
       return;
     }
 
     setUpdating(matterId);
-    const res  = await fetch(`/api/matters/${matterId}/release`, {
+    const res = await fetch(`/api/matters/${matterId}/release`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reason: releaseReason }),
@@ -82,9 +91,13 @@ export default function LawyerMattersPage() {
     load();
   }
 
-  const active    = matters.filter(m => m.status !== "completed" && m.status !== "archived");
-  const completed = matters.filter(m => m.status === "completed");
+  const active = matters.filter(
+    (m) => m.status !== "completed" && m.status !== "archived",
+  );
+  const completed = matters.filter((m) => m.status === "completed");
   const displayed = tab === "active" ? active : completed;
+
+  const router = useRouter();
 
   return (
     <div>
@@ -97,15 +110,25 @@ export default function LawyerMattersPage() {
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
-        {([
-          { key: "active",    label: `Active (${active.length})`       },
-          { key: "completed", label: `Completed (${completed.length})` },
-        ] as { key: Tab; label: string }[]).map(({ key, label }) => (
-          <button key={key} onClick={() => setTab(key)}
-            className={"px-4 py-2 rounded-lg text-sm font-medium transition-all " +
+        {(
+          [
+            { key: "active", label: `Active (${active.length})` },
+            { key: "completed", label: `Completed (${completed.length})` },
+          ] as { key: Tab; label: string }[]
+        ).map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={(e) => {
+              e.stopPropagation();
+              setTab(key);
+            }}
+            className={
+              "px-4 py-2 rounded-lg text-sm font-medium transition-all " +
               (tab === key
                 ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
-                : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800")}>
+                : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800")
+            }
+          >
             {label}
           </button>
         ))}
@@ -118,23 +141,35 @@ export default function LawyerMattersPage() {
       ) : displayed.length === 0 ? (
         <div className="card text-center py-16">
           <p className="text-sm text-gray-400">
-            {tab === "active" ? "No active matters assigned to you." : "No completed matters yet."}
+            {tab === "active"
+              ? "No active matters assigned to you."
+              : "No completed matters yet."}
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           {displayed.map((m) => {
-            const stage      = m.stage as string;
-            const step       = stageStepMap[m.stage as MatterStage] ?? 1;
+            const stage = m.stage as string;
+            const step = stageStepMap[m.stage as MatterStage] ?? 1;
             const isUpdating = updating === m._id;
             const isReleasing = releasing === m._id;
-            const canRelease  = !BLOCKED_RELEASE_STAGES.includes(stage) && m.status !== "completed";
+            const canRelease =
+              !BLOCKED_RELEASE_STAGES.includes(stage) &&
+              m.status !== "completed";
 
             return (
-              <Link
-                href={`/lawyer/matters/${m._id}`}
+              <div
+                role="button"
+                tabIndex={0}
                 key={m._id}
                 className="block card hover:border-brand-300 dark:hover:border-brand-700 transition-all cursor-pointer"
+                onClick={() => router.push(`/lawyer/matters/${m._id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    router.push(`/lawyer/matters/${m._id}`);
+                  }
+                }}
               >
                 {/* Header */}
                 <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-4 mb-4">
@@ -161,6 +196,10 @@ export default function LawyerMattersPage() {
                       <div className="flex flex-wrap gap-3 mt-2">
                         <a
                           href={`mailto:${m.client.email}`}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
                           className="inline-flex items-center gap-1.5 text-xs text-brand-600 dark:text-brand-400 hover:underline"
                         >
                           {m.client.email}
@@ -168,6 +207,10 @@ export default function LawyerMattersPage() {
                         {m.client.phone && (
                           <a
                             href={`tel:${m.client.phone}`}
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => e.stopPropagation()}
                             className="inline-flex items-center gap-1.5 text-xs text-brand-600 dark:text-brand-400 hover:underline"
                           >
                             {m.client.phone}
@@ -234,6 +277,10 @@ export default function LawyerMattersPage() {
                           className="input py-1 text-xs w-44"
                           value={stage}
                           disabled={isUpdating}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
                           onChange={(e) => {
                             e.stopPropagation();
                             updateStage(m._id, e.target.value as MatterStage);
@@ -257,6 +304,7 @@ export default function LawyerMattersPage() {
                               setReleaseError("");
                               setReleaseReason("");
                             }}
+                            onKeyDown={(e) => e.stopPropagation()}
                             disabled={isUpdating}
                             className="btn text-xs gap-1.5 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
                           >
@@ -265,7 +313,11 @@ export default function LawyerMattersPage() {
                           </button>
                         )}
                         <button
-                          onClick={() => markComplete(m._id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            markComplete(m._id);
+                          }}
+                          onKeyDown={(e) => e.stopPropagation()}
                           disabled={isUpdating}
                           className="btn btn-primary text-xs gap-1.5"
                         >
@@ -301,6 +353,9 @@ export default function LawyerMattersPage() {
                           placeholder="Please explain why you are releasing this matter (min. 20 characters)..."
                           value={releaseReason}
                           onClick={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
                           onChange={(e) => setReleaseReason(e.target.value)}
                           maxLength={500}
                         />
@@ -311,7 +366,13 @@ export default function LawyerMattersPage() {
                         )}
                         <div className="flex gap-2">
                           <button
-                            onClick={() => releaseMatter(m._id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              releaseMatter(m._id);
+                            }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => e.stopPropagation()}
                             disabled={isUpdating}
                             className="btn btn-danger text-xs gap-1.5 flex-1 justify-center"
                           >
@@ -323,11 +384,15 @@ export default function LawyerMattersPage() {
                             Confirm release
                           </button>
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setReleasing(null);
                               setReleaseReason("");
                               setReleaseError("");
                             }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => e.stopPropagation()}
                             className="btn text-xs"
                           >
                             Cancel
@@ -354,7 +419,7 @@ export default function LawyerMattersPage() {
                     </span>
                   </div>
                 )}
-              </Link>
+              </div>
             );
           })}
         </div>
