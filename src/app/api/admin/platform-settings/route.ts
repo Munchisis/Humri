@@ -7,11 +7,11 @@ import PlatformSettings from "@/models/PlatformSettings";
 
 const SettingsSchema = z.object({
   maxMattersPerLawyer: z.number().min(1).max(10).optional(),
-  staleMatterDays:     z.number().min(1).max(30).optional(),
-  reminderDays:        z.number().min(1).max(29).optional(),
-  suspensionDays:      z.number().min(7).max(60).optional(),
-  platformName:        z.string().min(2).max(50).optional(),
-  supportEmail:        z.string().email().optional(),
+  staleMatterDays: z.number().min(1).max(30).optional(),
+  reminderDays: z.number().min(1).max(29).optional(),
+  suspensionDays: z.number().min(7).max(60).optional(),
+  platformName: z.string().min(2).max(50).optional(),
+  supportEmail: z.string().email().optional(),
 });
 
 export async function GET() {
@@ -22,13 +22,15 @@ export async function GET() {
 
   await connectDB();
 
-  // Get or create default settings
-  let settings = await PlatformSettings.findOne().lean();
-  if (!settings) {
-    settings = await PlatformSettings.create({});
+  // 1. Try to find existing plain-object settings
+  const existingSettings = await PlatformSettings.findOne().lean();
+  if (existingSettings) {
+    return NextResponse.json({ settings: existingSettings });
   }
 
-  return NextResponse.json({ settings });
+  // 2. If missing, create default document and return it directly
+  const newSettings = await PlatformSettings.create({});
+  return NextResponse.json({ settings: newSettings });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -37,12 +39,12 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body   = await req.json();
+  const body = await req.json();
   const parsed = SettingsSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.errors[0].message },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -54,7 +56,7 @@ export async function PATCH(req: NextRequest) {
   ) {
     return NextResponse.json(
       { error: "Reminder days must be less than stale matter days." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -68,7 +70,7 @@ export async function PATCH(req: NextRequest) {
         updatedBy: session.user.id,
       },
     },
-    { new: true, upsert: true }
+    { new: true, upsert: true },
   );
 
   return NextResponse.json({
