@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
-  Scale,
   Search,
   Loader2,
   AlertCircle,
@@ -14,6 +13,7 @@ import {
 } from "lucide-react";
 import { MATTER_STAGES, stageStepMap, TOTAL_STAGES } from "@/lib/utils";
 import type { MatterStatus, MatterStage, MatterUrgency } from "@/types";
+import Image from "next/image";
 
 interface TrackResult {
   referenceNumber: string;
@@ -100,8 +100,8 @@ function TrackForm() {
       <nav className="border-b border-gray-100 bg-white dark:bg-gray-800 dark:border-none">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-brand-800 rounded-lg flex items-center justify-center">
-              <Scale className="w-4 h-4 text-brand-100" />
+            <div className="w-10 h-10 dark:shadow-sm dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0">
+              <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
             </div>
             <span className="text-sm font-semibold text-gray-900 dark:text-gray-200">
               HUMRI

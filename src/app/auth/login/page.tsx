@@ -4,7 +4,8 @@ import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Scale, AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
+import Image from "next/image";
 
 function LoginForm() {
   const router = useRouter();
@@ -47,9 +48,9 @@ function LoginForm() {
         <div className="flex items-center gap-3 justify-center mb-8">
           <Link
             href="/"
-            className="w-10 h-10 bg-brand-800 rounded-xl flex items-center justify-center"
+            className="w-10 h-10 dark:shadow-sm dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0"
           >
-            <Scale className="w-5 h-5 text-brand-100" />
+            <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
           </Link>
           <div>
             <Link

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Scale, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
+import Image from "next/image";
 
 export default function PendingPage() {
   return (
@@ -27,7 +28,7 @@ export default function PendingPage() {
           </ul>
         </div>
         <div className="flex items-center justify-center gap-2 text-xs text-gray-400 mt-2">
-          <Scale className="w-3.5 h-3.5" />
+         <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
           <Link href="/" className="hover:text-gray-600">
             Return to HUMRI home
           </Link>

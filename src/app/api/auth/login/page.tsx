@@ -4,7 +4,8 @@ import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Scale, AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
+import Image from "next/image";
 
 function LoginForm() {
   const router = useRouter();
@@ -44,16 +45,22 @@ function LoginForm() {
       <div className="w-full max-w-md">
         <div className="flex items-center gap-3 justify-center mb-8">
           <div className="w-10 h-10 bg-brand-800 rounded-xl flex items-center justify-center">
-            <Scale className="w-5 h-5 text-brand-100" />
+            <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
           </div>
           <div>
-            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-none">HUMRI</div>
-            <div className="text-xs text-gray-400 tracking-wide uppercase mt-0.5">Pro bono legal aid</div>
+            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-none">
+              HUMRI
+            </div>
+            <div className="text-xs text-gray-400 tracking-wide uppercase mt-0.5">
+              Pro bono legal aid
+            </div>
           </div>
         </div>
 
         <div className="card">
-          <h1 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-1">Sign in</h1>
+          <h1 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-1">
+            Sign in
+          </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
             Lawyer and admin access only.{" "}
             <Link href="/submit" className="text-brand-600 hover:underline">
@@ -85,7 +92,10 @@ function LoginForm() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="label mb-0">Password</label>
-                <Link href="/auth/forgot-password" className="text-xs text-brand-600 hover:underline">
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-xs text-brand-600 hover:underline"
+                >
                   Forgot password?
                 </Link>
               </div>
@@ -118,7 +128,9 @@ function LoginForm() {
               className="btn btn-primary w-full justify-center py-2.5 mt-2"
             >
               {loading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Signing in…</>
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Signing in…
+                </>
               ) : (
                 "Sign in"
               )}
@@ -128,7 +140,10 @@ function LoginForm() {
 
         <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-5">
           Volunteer lawyer?{" "}
-          <Link href="/auth/register" className="text-brand-600 hover:underline font-medium">
+          <Link
+            href="/auth/register"
+            className="text-brand-600 hover:underline font-medium"
+          >
             Apply to join →
           </Link>
         </p>

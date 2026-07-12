@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Scale, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import Image from "next/image";
 
 const SPECIALISATIONS = [
   "Employment & Labour",
@@ -126,8 +127,8 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
         <div className="flex items-center gap-3 justify-center mb-8">
-          <div className="w-10 h-10 bg-brand-800 rounded-xl flex items-center justify-center">
-            <Scale className="w-5 h-5 text-brand-100" />
+          <div className="w-10 h-10 dark:shadow-sm dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0">
+            <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
           </div>
           <div>
             <div className="text-lg font-semibold leading-none">Lex Gratis</div>
@@ -308,7 +309,6 @@ export default function RegisterPage() {
                 )}
               </div>
               {/* Consent Warning Message */}
-
             </div>
 
             <button

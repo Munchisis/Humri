@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Scale, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import Image from "next/image";
 
 interface LegalLayoutProps {
   title: string;
@@ -15,11 +16,16 @@ export function LegalLayout({ title, lastUpdated, children }: LegalLayoutProps) 
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-brand-800 rounded-lg flex items-center justify-center">
-              <Scale className="w-4 h-4 text-brand-100" />
+              <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
             </div>
-            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">HUMRI</span>
+            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+              HUMRI
+            </span>
           </Link>
-          <Link href="/" className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+          >
             <ArrowLeft className="w-4 h-4" />
             Back to home
           </Link>
@@ -29,7 +35,9 @@ export function LegalLayout({ title, lastUpdated, children }: LegalLayoutProps) 
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="mb-10">
-          <h1 className="text-3xl font-medium text-gray-900 dark:text-gray-100 mb-3">{title}</h1>
+          <h1 className="text-3xl font-medium text-gray-900 dark:text-gray-100 mb-3">
+            {title}
+          </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Last updated: {lastUpdated}
           </p>
@@ -38,12 +46,15 @@ export function LegalLayout({ title, lastUpdated, children }: LegalLayoutProps) 
         {/* Legal nav */}
         <div className="flex gap-2 flex-wrap mb-10">
           {[
-            { href: "/legal/privacy", label: "Privacy Policy"  },
-            { href: "/legal/terms",   label: "Terms of Use"    },
-            { href: "/legal/cookies", label: "Cookie Policy"   },
+            { href: "/legal/privacy", label: "Privacy Policy" },
+            { href: "/legal/terms", label: "Terms of Use" },
+            { href: "/legal/cookies", label: "Cookie Policy" },
           ].map(({ href, label }) => (
-            <Link key={href} href={href}
-              className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-brand-400 hover:text-brand-600 transition-all">
+            <Link
+              key={href}
+              href={href}
+              className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-brand-400 hover:text-brand-600 transition-all"
+            >
               {label}
             </Link>
           ))}
@@ -59,13 +70,28 @@ export function LegalLayout({ title, lastUpdated, children }: LegalLayoutProps) 
       <footer className="border-t border-gray-100 dark:border-gray-800 mt-20">
         <div className="max-w-4xl mx-auto px-4 py-8 flex items-center justify-between text-xs text-gray-400">
           <div className="flex items-center gap-2">
-            <Scale className="w-4 h-4" />
-            <span>HUMRI — Pro Bono Legal Aid Nigeria</span>
+            <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
+            <span>HUMRI — HUMAN RIGHTS. HUMAN DIGNITY.JUSTICE FOR ALL.</span>
           </div>
           <div className="flex gap-4">
-            <Link href="/legal/privacy" className="hover:text-gray-600 dark:hover:text-gray-200">Privacy</Link>
-            <Link href="/legal/terms"   className="hover:text-gray-600 dark:hover:text-gray-200">Terms</Link>
-            <Link href="/legal/cookies" className="hover:text-gray-600 dark:hover:text-gray-200">Cookies</Link>
+            <Link
+              href="/legal/privacy"
+              className="hover:text-gray-600 dark:hover:text-gray-200"
+            >
+              Privacy
+            </Link>
+            <Link
+              href="/legal/terms"
+              className="hover:text-gray-600 dark:hover:text-gray-200"
+            >
+              Terms
+            </Link>
+            <Link
+              href="/legal/cookies"
+              className="hover:text-gray-600 dark:hover:text-gray-200"
+            >
+              Cookies
+            </Link>
           </div>
         </div>
       </footer>

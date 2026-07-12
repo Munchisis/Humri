@@ -3,7 +3,8 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Scale, CheckCircle, AlertCircle, Loader2, XCircle } from "lucide-react";
+import { CheckCircle, AlertCircle, Loader2, XCircle } from "lucide-react";
+import Image from "next/image";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -61,12 +62,16 @@ function ResetPasswordForm() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center gap-3 justify-center mb-8">
-          <div className="w-10 h-10 bg-brand-800 rounded-xl flex items-center justify-center">
-            <Scale className="w-5 h-5 text-brand-100" />
+          <div className="w-10 h-10 dark:shadow-sm dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0">
+            <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
           </div>
           <div>
-            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-none">HUMRI</div>
-            <div className="text-xs text-gray-400 tracking-wide uppercase mt-0.5">Pro bono legal aid</div>
+            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-none">
+              HUMRI
+            </div>
+            <div className="text-xs text-gray-400 tracking-wide uppercase mt-0.5">
+              Pro bono legal aid
+            </div>
           </div>
         </div>
 
@@ -80,11 +85,17 @@ function ResetPasswordForm() {
               <div className="w-14 h-14 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <XCircle className="w-7 h-7 text-red-500" />
               </div>
-              <h1 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-2">Link expired or invalid</h1>
+              <h1 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-2">
+                Link expired or invalid
+              </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
-                This password reset link is no longer valid. Please request a new one.
+                This password reset link is no longer valid. Please request a
+                new one.
               </p>
-              <Link href="/auth/forgot-password" className="btn btn-primary w-full justify-center py-2.5">
+              <Link
+                href="/auth/forgot-password"
+                className="btn btn-primary w-full justify-center py-2.5"
+              >
                 Request a new link
               </Link>
             </div>
@@ -93,14 +104,18 @@ function ResetPasswordForm() {
               <div className="w-14 h-14 bg-brand-50 dark:bg-brand-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-7 h-7 text-brand-600" />
               </div>
-              <h1 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-2">Password reset</h1>
+              <h1 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-2">
+                Password reset
+              </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Redirecting you to sign in…
               </p>
             </div>
           ) : (
             <>
-              <h1 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-1">Set a new password</h1>
+              <h1 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-1">
+                Set a new password
+              </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                 Choose a strong password you haven&apos;t used before.
               </p>
@@ -115,18 +130,38 @@ function ResetPasswordForm() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="label">New password</label>
-                  <input type="password" className="input" placeholder="Min. 8 characters" required
-                    value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <input
+                    type="password"
+                    className="input"
+                    placeholder="Min. 8 characters"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
                 </div>
                 <div>
                   <label className="label">Confirm new password</label>
-                  <input type="password" className="input" placeholder="Repeat password" required
-                    value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+                  <input
+                    type="password"
+                    className="input"
+                    placeholder="Repeat password"
+                    required
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                  />
                 </div>
-                <button type="submit" disabled={loading} className="btn btn-primary w-full justify-center py-2.5">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn btn-primary w-full justify-center py-2.5"
+                >
                   {loading ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> Resetting…</>
-                  ) : "Reset password"}
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Resetting…
+                    </>
+                  ) : (
+                    "Reset password"
+                  )}
                 </button>
               </form>
             </>

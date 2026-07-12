@@ -5,11 +5,12 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import {
-  Scale, LayoutDashboard, FileText,
+  LayoutDashboard, FileText,
   Users, LogOut, ChevronRight, MessageSquare, Settings,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { ThemeToggle } from "@/components/shared/themeToggle";
+import Image from "next/image";
 
 interface Props {
   user: { name?: string | null; email?: string | null };
@@ -43,8 +44,8 @@ export function AdminSidebar({ user }: Props) {
   return (
     <aside className="w-60 shrink-0 bg-brand-900 flex flex-col min-h-screen">
       <div className="flex items-center gap-3 px-5 py-5 border-b border-brand-800">
-        <Link href="/" className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center shrink-0">
-          <Scale className="w-4 h-4 text-brand-900" />
+        <Link href="/" className="w-10 h-10 dark:shadow-sm dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0">
+          <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
         </Link>
         <div>
           <Link href="/" className="text-sm font-semibold text-brand-50 leading-none">HUMRI</Link>

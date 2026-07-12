@@ -1,11 +1,11 @@
 import Link from "next/link";
 import {
-  Scale,
   ShieldCheck,
   ArrowRight,
   Users,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/shared/themeToggle";
+import Image from "next/image";
 
 export default function HomePage() {
   return (
@@ -14,11 +14,8 @@ export default function HomePage() {
       <nav className="border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Link
-              href="/"
-              className=" hidden w-8 h-8 bg-brand-800 rounded-lg sm:flex items-center justify-center"
-            >
-              <Scale className="w-4 h-4 text-brand-100" />
+            <Link href="/" className="w-10 h-10 dark:shadow-sm dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0">
+              <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
             </Link>
             <div>
               <Link
@@ -27,8 +24,9 @@ export default function HomePage() {
               >
                 HUMRI
               </Link>
-              <div className="hidden md:block text-xs text-gray-400 mt-0.5">
-                legal aid
+              <div className="hidden md:block text-[10px] text-gray-400 mt-0.5">
+                HUMAN RIGHTS. HUMAN DIGNITY.
+                <span className="text-orange-500">JUSTICE FOR ALL.</span>
               </div>
             </div>
           </div>
@@ -215,9 +213,9 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-5xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
-          <div className="flex items-center gap-2">
-            <Scale className="w-4 h-4" />
-            <span>HUMRI — Pro Bono Legal Aid Nigeria</span>
+          <div className="flex flex-col  gap-2">
+            <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
+            <span>HUMRI — HUMAN RIGHTS. HUMAN DIGNITY.JUSTICE FOR ALL.</span>
           </div>
           <div className="flex gap-4">
             <Link

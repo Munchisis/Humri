@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Scale, CheckCircle, AlertCircle, Loader2, Copy, Check } from "lucide-react";
+import { CheckCircle, AlertCircle, Loader2, Copy, Check } from "lucide-react";
+import Image from "next/image";
 
 const MATTER_TYPES = [
   { value: "employment",    label: "Employment dispute"  },
@@ -164,10 +165,15 @@ export default function SubmitPage() {
     <div className="min-h-screen bg-gray-50  dark:bg-gray-900">
       <header className="bg-brand-900 px-6 py-4 flex items-center justify-between  dark:bg-gray-800">
         <Link href="/" className="flex items-center gap-3">
-          <Link href="/" className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
-            <Scale className="w-4 h-4 text-brand-900" />
+          <Link
+            href="/"
+            className="w-10 h-10 dark:shadow-sm dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0"
+          >
+            <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
           </Link>
-          <Link href="/" className="text-sm font-semibold text-brand-50">HUMRI</Link>
+          <Link href="/" className="text-sm font-semibold text-brand-50">
+            HUMRI
+          </Link>
         </Link>
         <Link
           href="/track"
@@ -347,7 +353,6 @@ export default function SubmitPage() {
               {/* Consent Box Section */}
               <div className="border-t border-gray-100 pt-4 dark:border-gray-800 space-y-2">
                 <div className="flex items-start gap-2.5 text-sm text-gray-600 dark:text-gray-300">
-                 
                   {/* The Checkbox element */}
                   <input
                     type="checkbox"

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Scale, ArrowLeft, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import Image from "next/image";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail]     = useState("");
@@ -36,12 +37,17 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center gap-3 justify-center mb-8">
-          <div className="w-10 h-10 bg-brand-800 rounded-xl flex items-center justify-center">
-            <Scale className="w-5 h-5 text-brand-100" />
+          <div className="w-10 h-10 dark:shadow-sm dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0">
+            <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
           </div>
           <div>
-            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-none">HUMRI</div>
-            <div className="text-xs text-gray-400 tracking-wide uppercase mt-0.5">Pro bono legal aid</div>
+            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-none">
+              HUMRI
+            </div>
+            <div className="text-xs text-gray-400 tracking-wide uppercase mt-0.5">
+              HUMAN RIGHTS. HUMAN DIGNITY.
+              <span className="text-orange-500">JUSTICE FOR ALL.</span>
+            </div>
           </div>
         </div>
 
@@ -51,23 +57,34 @@ export default function ForgotPasswordPage() {
               <div className="w-14 h-14 bg-brand-50 dark:bg-brand-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-7 h-7 text-brand-600" />
               </div>
-              <h1 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-2">Check your email</h1>
+              <h1 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-2">
+                Check your email
+              </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
-                If an account exists with <strong>{email}</strong>, we&apos;ve sent a link to reset your password.
-                The link expires in 1 hour.
+                If an account exists with <strong>{email}</strong>, we&apos;ve
+                sent a link to reset your password. The link expires in 1 hour.
               </p>
-              <Link href="/auth/login" className="btn btn-primary w-full justify-center py-2.5">
+              <Link
+                href="/auth/login"
+                className="btn btn-primary w-full justify-center py-2.5"
+              >
                 Return to sign in
               </Link>
             </div>
           ) : (
             <>
-              <Link href="/auth/login" className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 mb-4">
+              <Link
+                href="/auth/login"
+                className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 mb-4"
+              >
                 <ArrowLeft className="w-3.5 h-3.5" /> Back to sign in
               </Link>
-              <h1 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-1">Forgot your password?</h1>
+              <h1 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-1">
+                Forgot your password?
+              </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                Enter your email address and we&apos;ll send you a link to reset your password.
+                Enter your email address and we&apos;ll send you a link to reset
+                your password.
               </p>
 
               {error && (
@@ -90,10 +107,18 @@ export default function ForgotPasswordPage() {
                     autoComplete="email"
                   />
                 </div>
-                <button type="submit" disabled={loading} className="btn btn-primary w-full justify-center py-2.5">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn btn-primary w-full justify-center py-2.5"
+                >
                   {loading ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> Sending link…</>
-                  ) : "Send reset link"}
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Sending link…
+                    </>
+                  ) : (
+                    "Send reset link"
+                  )}
                 </button>
               </form>
             </>
