@@ -22,13 +22,13 @@ export async function GET() {
 
   await connectDB();
 
-  // 1. Try to find existing plain-object settings
+  
   const existingSettings = await PlatformSettings.findOne().lean();
   if (existingSettings) {
     return NextResponse.json({ settings: existingSettings });
   }
 
-  // 2. If missing, create default document and return it directly
+
   const newSettings = await PlatformSettings.create({});
   return NextResponse.json({ settings: newSettings });
 }
