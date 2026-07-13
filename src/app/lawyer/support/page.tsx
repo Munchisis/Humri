@@ -95,7 +95,7 @@ export default function LawyerSupportPage() {
                 Verify your email so we can reliably reach you with matter updates and admin replies.
               </p>
               {resendMessage && (
-                <p className="text-xs text-amber-800 dark:text-amber-300 mt-2 font-medium">{resendMessage}</p>
+                <p className="text-sm text-brand-400 dark:text-amber-300 mt-2 font-medium">{resendMessage}</p>
               )}
             </div>
             <button onClick={resendVerification} disabled={resendLoading}
