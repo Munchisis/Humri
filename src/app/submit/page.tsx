@@ -177,7 +177,7 @@ export default function SubmitPage() {
         </Link>
         <Link
           href="/track"
-          className="text-sm text-brand-300 hover:text-brand-50"
+          className="text-sm text-gray-300 hover:text-brand-50"
         >
           Track existing matter →
         </Link>
