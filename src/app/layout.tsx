@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -10,7 +11,11 @@ export const metadata: Metadata = {
   title: "HUMRI — Pro Bono Legal Aid",
   description:
     "Connect with qualified volunteer lawyers. Free, confidential legal help for everyone regardless of means.",
+  other: {
+    ...Sentry.getTraceData(),
+  },
 };
+
 
 export default function RootLayout({
   children,
