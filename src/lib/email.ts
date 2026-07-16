@@ -217,13 +217,19 @@ export async function sendLawyerApproved({
           <h1 style="color:#E1F5EE;font-size:20px;margin:0">HumRi</h1>
           <p style="color:#9FE1CB;font-size:12px;margin:4px 0 0">Pro bono legal aid</p>
         </div>
+        
         <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
           <p style="margin:0 0 16px">Dear <strong>${lawyerName}</strong>,</p>
-          <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
+          <p style="margin-top:0 0 16px;color:#4b5563;line-height:1.6">
             Welcome to HumRi. Your volunteer lawyer account has been approved and
-            you can now sign in to browse and accept matters from clients,here's how to get started..
+            you can now sign in to browse and accept matters from clients.
           </p>
-          ul style="margin:0 0 24px;padding-left:20px;color:#4b5563;line-height:1.6">
+
+          <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
+            Here’s a quick guide to get you started:
+          </p>
+
+          <ul style="margin:0 0 24px;padding-left:20px;color:#4b5563;line-height:1.6">
             <li>Sign in to your account using the button below.</li>
             <li>Browse available matters and accept those you can assist with.</li>
             <li>Open a matched matter to review the case details and client situation.</li>
@@ -232,14 +238,28 @@ export async function sendLawyerApproved({
             <li>Mark the matter Resolved once the case is closed.</li>
             <li>Reach out via Support on your dashboard if you hit any issues.</li>
           </ul>
-          p style="margin:0 0 24px;color:#4b5563;line-height:1.6">
+
+          <p style="margin:0 0 24px;color:#4b5563;line-height:1.6">
            That's it — you're ready to start taking on matters.
           </p>
+
           <a href="${APP_URL}/auth/login"
             style="display:inline-block;background:#085041;color:#E1F5EE;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500;font-size:14px">
             Sign in to your account →
           </a>
           <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0">
+          <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
+            If you have any questions or need assistance, please contact the HumRi support team.
+          </p>
+          <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
+            Thank you for volunteering your time and expertise to help those in need.
+          </p>
+          <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
+            Best regards,<br />
+            The HumRi Team
+          </p>
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0">
+
           <p style="margin:0;font-size:12px;color:#9ca3af">
             This is an automated message from HumRi. Please do not reply to this email.
           </p>
