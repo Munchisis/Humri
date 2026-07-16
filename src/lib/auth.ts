@@ -55,7 +55,7 @@ export const authOptions: NextAuthOptions = {
 
         const isValid = await user.comparePassword(credentials.password);
         if (!isValid) {
-          throw new Error("Incorrect password. Please try again.");
+          throw new Error("Incorrect User or password. Please try again.");
         }
 
         // If email is in ADMIN_EMAILS whitelist, auto-promote to admin

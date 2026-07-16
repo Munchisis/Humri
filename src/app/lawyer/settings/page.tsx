@@ -99,6 +99,7 @@ export default function LawyerSettingsPage() {
   const [resendMsg, setResendMsg] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteMsg, setDeleteMsg] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     async function loadProfile() {
@@ -168,12 +169,11 @@ export default function LawyerSettingsPage() {
     setResendMsg(data.message ?? data.error ?? "");
   }
 
-  async function handleDeleteAccount() {
-    const confirmed = window.confirm(
-      "Delete your account? This cannot be undone and will remove your lawyer profile from HumRi.",
-    );
-    if (!confirmed) return;
+  function handleDeleteAccount() {
+    setShowDeleteModal(true);
+  }
 
+  async function confirmDeleteAccount() {
     setDeleteLoading(true);
     setDeleteMsg("");
 
@@ -186,6 +186,7 @@ export default function LawyerSettingsPage() {
       return;
     }
 
+    setShowDeleteModal(false);
     await signOut({ callbackUrl: "/auth/login" });
   }
 
@@ -566,7 +567,7 @@ export default function LawyerSettingsPage() {
             type="button"
             onClick={handleDeleteAccount}
             disabled={deleteLoading}
-            className="btn border-red-600 bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+            className="btn border-red-600 bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 justify-center"
           >
             {deleteLoading ? (
               <>
@@ -578,6 +579,47 @@ export default function LawyerSettingsPage() {
           </button>
         </div>
       </div>
+      {/* Delete confirmation modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowDeleteModal(false)}
+          />
+          <div className="relative bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-md p-6 z-10">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Delete account
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+              This action cannot be undone. Your profile will be removed.
+            </p>
+
+            <div className="mt-4 flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                className="btn border hover:border-gray-400 text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteAccount}
+                disabled={deleteLoading}
+                className="btn bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleteLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Deleting…
+                  </>
+                ) : (
+                  "Delete account"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
