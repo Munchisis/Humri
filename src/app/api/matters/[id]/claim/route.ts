@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { authOptions, verifyLawyerApproved } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Matter from "@/models/Matter";
 import User from "@/models/User";
@@ -14,6 +14,13 @@ export async function POST(
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "lawyer") {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  }
+
+  if (!(await verifyLawyerApproved(session))) {
+    return NextResponse.json(
+      { error: "Account suspended or not approved." },
+      { status: 403 },
+    );
   }
 
   await connectDB();

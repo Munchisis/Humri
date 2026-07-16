@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { LawyerSidebar } from "@/components/lawyer/LawyerSidebar";
 import { MobileSidebarWrapper } from "@/components/shared/MobileSidebarWrapper";
+import { connectDB } from "@/lib/db";
+import User from "@/models/User";
 
 export default async function LawyerLayout({
   children,
@@ -16,6 +18,13 @@ export default async function LawyerLayout({
   }
 
   if (!session.user.isApproved) {
+    redirect("/auth/pending");
+  }
+
+  const currentUser = await User.findById(session.user.id)
+    .select("isApproved")
+    .lean();
+  if (!currentUser?.isApproved) {
     redirect("/auth/pending");
   }
 

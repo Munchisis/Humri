@@ -1,22 +1,68 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import {
-  Loader2, CheckCircle, AlertCircle, User,
-  Lock, Eye, EyeOff, Mail,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+  User,
+  Lock,
+  Eye,
+  EyeOff,
+  Mail,
 } from "lucide-react";
 
 const NIGERIAN_STATES = [
-  "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
-  "Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo",
-  "Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa",
-  "Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara",
+  "Abia",
+  "Adamawa",
+  "Akwa Ibom",
+  "Anambra",
+  "Bauchi",
+  "Bayelsa",
+  "Benue",
+  "Borno",
+  "Cross River",
+  "Delta",
+  "Ebonyi",
+  "Edo",
+  "Ekiti",
+  "Enugu",
+  "FCT",
+  "Gombe",
+  "Imo",
+  "Jigawa",
+  "Kaduna",
+  "Kano",
+  "Katsina",
+  "Kebbi",
+  "Kogi",
+  "Kwara",
+  "Lagos",
+  "Nasarawa",
+  "Niger",
+  "Ogun",
+  "Ondo",
+  "Osun",
+  "Oyo",
+  "Plateau",
+  "Rivers",
+  "Sokoto",
+  "Taraba",
+  "Yobe",
+  "Zamfara",
 ];
 
 const SPECIALISATIONS = [
-  "Employment & Labour","Family Law","Criminal Defence","Property & Land",
-  "Contract Law","Human Rights","Debt Recovery","Immigration","General Practice",
+  "Employment & Labour",
+  "Family Law",
+  "Criminal Defence",
+  "Property & Land",
+  "Contract Law",
+  "Human Rights",
+  "Debt Recovery",
+  "Immigration",
+  "General Practice",
 ];
 
 type Tab = "profile" | "password" | "email";
@@ -27,35 +73,43 @@ export default function LawyerSettingsPage() {
 
   // Profile state
   const [profile, setProfile] = useState({
-    name: "", specialisation: "", state: "", barNumber: "",
+    name: "",
+    specialisation: "",
+    state: "",
+    barNumber: "",
   });
   const [profileLoading, setProfileLoading] = useState(false);
-  const [profileMsg, setProfileMsg]         = useState({ text: "", error: false });
+  const [profileMsg, setProfileMsg] = useState({ text: "", error: false });
 
   // Password state
   const [passwords, setPasswords] = useState({
-    currentPassword: "", newPassword: "", confirmPassword: "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
   const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew]         = useState(false);
+  const [showNew, setShowNew] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
-  const [passwordMsg, setPasswordMsg]         = useState({ text: "", error: false });
+  const [passwordMsg, setPasswordMsg] = useState({ text: "", error: false });
 
   // Email verification
-  const emailVerified = (session?.user as Record<string, unknown> | undefined)?.emailVerified as boolean | undefined;
+  const emailVerified = (session?.user as Record<string, unknown> | undefined)
+    ?.emailVerified as boolean | undefined;
   const [resendLoading, setResendLoading] = useState(false);
-  const [resendMsg, setResendMsg]         = useState("");
+  const [resendMsg, setResendMsg] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteMsg, setDeleteMsg] = useState("");
 
   useEffect(() => {
     async function loadProfile() {
-      const res  = await fetch("/api/user/profile");
+      const res = await fetch("/api/user/profile");
       const data = await res.json();
       if (data.user) {
         setProfile({
-          name:           data.user.name           ?? "",
+          name: data.user.name ?? "",
           specialisation: data.user.specialisation ?? "",
-          state:          data.user.state          ?? "",
-          barNumber:      data.user.barNumber      ?? "",
+          state: data.user.state ?? "",
+          barNumber: data.user.barNumber ?? "",
         });
       }
     }
@@ -66,7 +120,7 @@ export default function LawyerSettingsPage() {
     e.preventDefault();
     setProfileMsg({ text: "", error: false });
     setProfileLoading(true);
-    const res  = await fetch("/api/user/profile", {
+    const res = await fetch("/api/user/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(profile),
@@ -84,33 +138,65 @@ export default function LawyerSettingsPage() {
       return;
     }
     setPasswordLoading(true);
-    const res  = await fetch("/api/user/password", {
+    const res = await fetch("/api/user/password", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         currentPassword: passwords.currentPassword,
-        newPassword:     passwords.newPassword,
+        newPassword: passwords.newPassword,
       }),
     });
     const data = await res.json();
     setPasswordLoading(false);
     setPasswordMsg({ text: data.message ?? data.error, error: !res.ok });
-    if (res.ok) setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    if (res.ok)
+      setPasswords({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
   }
 
   async function resendVerification() {
     setResendLoading(true);
     setResendMsg("");
-    const res  = await fetch("/api/auth/resend-verification", { method: "POST" });
+    const res = await fetch("/api/auth/resend-verification", {
+      method: "POST",
+    });
     const data = await res.json();
     setResendLoading(false);
     setResendMsg(data.message ?? data.error ?? "");
   }
 
+  async function handleDeleteAccount() {
+    const confirmed = window.confirm(
+      "Delete your account? This cannot be undone and will remove your lawyer profile from HumRi.",
+    );
+    if (!confirmed) return;
+
+    setDeleteLoading(true);
+    setDeleteMsg("");
+
+    const res = await fetch("/api/user/profile", { method: "DELETE" });
+    const data = await res.json();
+
+    if (!res.ok) {
+      setDeleteMsg(data.error ?? "Failed to delete account. Please try again.");
+      setDeleteLoading(false);
+      return;
+    }
+
+    await signOut({ callbackUrl: "/auth/login" });
+  }
+
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
-    { key: "profile",  label: "Profile",         icon: <User className="w-4 h-4" />  },
-    { key: "password", label: "Change password", icon: <Lock className="w-4 h-4" />  },
-    { key: "email",    label: "Email",           icon: <Mail className="w-4 h-4" />  },
+    { key: "profile", label: "Profile", icon: <User className="w-4 h-4" /> },
+    {
+      key: "password",
+      label: "Change password",
+      icon: <Lock className="w-4 h-4" />,
+    },
+    { key: "email", label: "Email", icon: <Mail className="w-4 h-4" /> },
   ];
 
   return (
@@ -125,12 +211,18 @@ export default function LawyerSettingsPage() {
       {/* Tab nav */}
       <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
         {tabs.map(({ key, label, icon }) => (
-          <button key={key} onClick={() => setTab(key)}
-            className={"flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all " +
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={
+              "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all " +
               (tab === key
                 ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300")}>
-            {icon}{label}
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300")
+            }
+          >
+            {icon}
+            {label}
           </button>
         ))}
       </div>
@@ -144,61 +236,105 @@ export default function LawyerSettingsPage() {
           <form onSubmit={handleProfileSave} className="space-y-4">
             <div>
               <label className="label">Full name</label>
-              <input className="input" value={profile.name}
-                onChange={(e) => setProfile(p => ({ ...p, name: e.target.value }))}
-                required />
+              <input
+                className="input"
+                value={profile.name}
+                onChange={(e) =>
+                  setProfile((p) => ({ ...p, name: e.target.value }))
+                }
+                required
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="label">NBA bar number</label>
-                <input className="input" value={profile.barNumber}
-                  onChange={(e) => setProfile(p => ({ ...p, barNumber: e.target.value }))} />
+                <input
+                  className="input"
+                  value={profile.barNumber}
+                  onChange={(e) =>
+                    setProfile((p) => ({ ...p, barNumber: e.target.value }))
+                  }
+                />
               </div>
               <div>
                 <label className="label">State</label>
-                <select className="input" value={profile.state}
-                  onChange={(e) => setProfile(p => ({ ...p, state: e.target.value }))}>
+                <select
+                  className="input"
+                  value={profile.state}
+                  onChange={(e) =>
+                    setProfile((p) => ({ ...p, state: e.target.value }))
+                  }
+                >
                   <option value="">Select state…</option>
-                  {NIGERIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                  {NIGERIAN_STATES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
             <div>
               <label className="label">Area of specialisation</label>
-              <select className="input" value={profile.specialisation}
-                onChange={(e) => setProfile(p => ({ ...p, specialisation: e.target.value }))}>
+              <select
+                className="input"
+                value={profile.specialisation}
+                onChange={(e) =>
+                  setProfile((p) => ({ ...p, specialisation: e.target.value }))
+                }
+              >
                 <option value="">Select specialisation…</option>
-                {SPECIALISATIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                {SPECIALISATIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
               </select>
             </div>
 
             {/* Read-only email */}
             <div>
               <label className="label">Email address</label>
-              <input className="input bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
-                value={session?.user?.email ?? ""} disabled />
+              <input
+                className="input bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
+                value={session?.user?.email ?? ""}
+                disabled
+              />
               <p className="text-xs text-gray-400 mt-1">
                 Email cannot be changed. Contact admin if you need to update it.
               </p>
             </div>
 
             {profileMsg.text && (
-              <div className={"flex items-center gap-2 text-sm rounded-lg px-4 py-3 " +
-                (profileMsg.error
-                  ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400"
-                  : "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400")}>
-                {profileMsg.error
-                  ? <AlertCircle className="w-4 h-4 shrink-0" />
-                  : <CheckCircle className="w-4 h-4 shrink-0" />}
+              <div
+                className={
+                  "flex items-center gap-2 text-sm rounded-lg px-4 py-3 " +
+                  (profileMsg.error
+                    ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400"
+                    : "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400")
+                }
+              >
+                {profileMsg.error ? (
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                ) : (
+                  <CheckCircle className="w-4 h-4 shrink-0" />
+                )}
                 {profileMsg.text}
               </div>
             )}
 
-            <button type="submit" disabled={profileLoading}
-              className="btn btn-primary w-full justify-center py-2.5">
-              {profileLoading
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
-                : "Save changes"}
+            <button
+              type="submit"
+              disabled={profileLoading}
+              className="btn btn-primary w-full justify-center py-2.5"
+            >
+              {profileLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Saving…
+                </>
+              ) : (
+                "Save changes"
+              )}
             </button>
           </form>
         </div>
@@ -218,12 +354,25 @@ export default function LawyerSettingsPage() {
                   type={showCurrent ? "text" : "password"}
                   className="input pr-10"
                   value={passwords.currentPassword}
-                  onChange={(e) => setPasswords(p => ({ ...p, currentPassword: e.target.value }))}
-                  required />
-                <button type="button" tabIndex={-1}
-                  onClick={() => setShowCurrent(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                  {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  onChange={(e) =>
+                    setPasswords((p) => ({
+                      ...p,
+                      currentPassword: e.target.value,
+                    }))
+                  }
+                  required
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowCurrent((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  {showCurrent ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -235,12 +384,22 @@ export default function LawyerSettingsPage() {
                   className="input pr-10"
                   placeholder="Min. 8 characters"
                   value={passwords.newPassword}
-                  onChange={(e) => setPasswords(p => ({ ...p, newPassword: e.target.value }))}
-                  required />
-                <button type="button" tabIndex={-1}
-                  onClick={() => setShowNew(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                  {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  onChange={(e) =>
+                    setPasswords((p) => ({ ...p, newPassword: e.target.value }))
+                  }
+                  required
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowNew((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  {showNew ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -251,27 +410,46 @@ export default function LawyerSettingsPage() {
                 className="input"
                 placeholder="Repeat new password"
                 value={passwords.confirmPassword}
-                onChange={(e) => setPasswords(p => ({ ...p, confirmPassword: e.target.value }))}
-                required />
+                onChange={(e) =>
+                  setPasswords((p) => ({
+                    ...p,
+                    confirmPassword: e.target.value,
+                  }))
+                }
+                required
+              />
             </div>
 
             {passwordMsg.text && (
-              <div className={"flex items-center gap-2 text-sm rounded-lg px-4 py-3 " +
-                (passwordMsg.error
-                  ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400"
-                  : "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400")}>
-                {passwordMsg.error
-                  ? <AlertCircle className="w-4 h-4 shrink-0" />
-                  : <CheckCircle className="w-4 h-4 shrink-0" />}
+              <div
+                className={
+                  "flex items-center gap-2 text-sm rounded-lg px-4 py-3 " +
+                  (passwordMsg.error
+                    ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400"
+                    : "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400")
+                }
+              >
+                {passwordMsg.error ? (
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                ) : (
+                  <CheckCircle className="w-4 h-4 shrink-0" />
+                )}
                 {passwordMsg.text}
               </div>
             )}
 
-            <button type="submit" disabled={passwordLoading}
-              className="btn btn-primary w-full justify-center py-2.5">
-              {passwordLoading
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Updating…</>
-                : "Update password"}
+            <button
+              type="submit"
+              disabled={passwordLoading}
+              className="btn btn-primary w-full justify-center py-2.5"
+            >
+              {passwordLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Updating…
+                </>
+              ) : (
+                "Update password"
+              )}
             </button>
           </form>
         </div>
@@ -310,17 +488,29 @@ export default function LawyerSettingsPage() {
                   Verify your email address
                 </p>
                 <p className="text-xs text-amber-700 dark:text-amber-400 mb-3 leading-relaxed">
-                  A verified email ensures you receive matter notifications, admin replies,
-                  and important platform updates. Unverified accounts may be suspended after 14 days.
+                  A verified email ensures you receive matter notifications,
+                  admin replies, and important platform updates. Unverified
+                  accounts may be suspended after 14 days.
                 </p>
                 {resendMsg && (
-                  <p className="text-xs font-medium text-amber-800 dark:text-amber-300 mb-2">{resendMsg}</p>
+                  <p className="text-xs font-medium text-amber-800 dark:text-amber-300 mb-2">
+                    {resendMsg}
+                  </p>
                 )}
-                <button onClick={resendVerification} disabled={resendLoading}
-                  className="btn text-xs gap-1.5 border-amber-300 text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/40">
-                  {resendLoading
-                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Sending…</>
-                    : <><Mail className="w-3.5 h-3.5" /> Resend verification email</>}
+                <button
+                  onClick={resendVerification}
+                  disabled={resendLoading}
+                  className="btn text-xs gap-1.5 border-amber-300 text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/40"
+                >
+                  {resendLoading ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Sending…
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="w-3.5 h-3.5" /> Resend verification email
+                    </>
+                  )}
                 </button>
               </div>
             )}
@@ -346,13 +536,48 @@ export default function LawyerSettingsPage() {
                 ))}
               </div>
               <p className="text-xs text-gray-400 mt-3">
-                All notifications are essential and cannot be disabled individually.
-                To stop receiving emails, contact the admin team.
+                All notifications are essential and cannot be disabled
+                individually. To stop receiving emails, contact the admin team.
               </p>
             </div>
           </div>
         </div>
       )}
+
+      <div className="card border-red-200 bg-red-50/70 dark:border-red-800 dark:bg-red-900/20 mt-6">
+        <div className="flex flex-col gap-3 p-6">
+          <div>
+            <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+              Danger zone
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+              Permanently delete your lawyer account and remove your access to
+              the portal.
+            </p>
+          </div>
+
+          {deleteMsg && (
+            <div className="rounded-xl border border-red-200 bg-red-100 px-4 py-3 text-sm text-red-700 dark:border-red-700 dark:bg-red-950/40 dark:text-red-300">
+              {deleteMsg}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={handleDeleteAccount}
+            disabled={deleteLoading}
+            className="btn border-red-600 bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+          >
+            {deleteLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Deleting account…
+              </>
+            ) : (
+              "Delete my account"
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

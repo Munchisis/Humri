@@ -221,11 +221,63 @@ export async function sendLawyerApproved({
           <p style="margin:0 0 16px">Dear <strong>${lawyerName}</strong>,</p>
           <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
             Welcome to HumRi. Your volunteer lawyer account has been approved and
-            you can now sign in to browse and accept matters from clients.
+            you can now sign in to browse and accept matters from clients,here's how to get started..
+          </p>
+          ul style="margin:0 0 24px;padding-left:20px;color:#4b5563;line-height:1.6">
+            <li>Sign in to your account using the button below.</li>
+            <li>Browse available matters and accept those you can assist with.</li>
+            <li>Open a matched matter to review the case details and client situation.</li>
+            <li>Communicate with clients and provide legal guidance as needed.</li>
+            <li>Update the matter's status as you work it (In progress / Awaiting client / Resolved).</li>
+            <li>Mark the matter Resolved once the case is closed.</li>
+            <li>Reach out via Support on your dashboard if you hit any issues.</li>
+          </ul>
+          p style="margin:0 0 24px;color:#4b5563;line-height:1.6">
+           That's it — you're ready to start taking on matters.
           </p>
           <a href="${APP_URL}/auth/login"
             style="display:inline-block;background:#085041;color:#E1F5EE;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500;font-size:14px">
             Sign in to your account →
+          </a>
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0">
+          <p style="margin:0;font-size:12px;color:#9ca3af">
+            This is an automated message from HumRi. Please do not reply to this email.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+export async function sendLawyerSuspended({
+  lawyerName,
+  lawyerEmail,
+}: {
+  lawyerName: string;
+  lawyerEmail: string;
+}) {
+  await resend.emails.send({
+    from: FROM,
+    to: lawyerEmail,
+    subject: "Your HumRi account has been suspended",
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+        <div style="background:#991b1b;padding:24px 32px;border-radius:12px 12px 0 0">
+          <h1 style="color:#fee2e2;font-size:20px;margin:0">HumRi</h1>
+          <p style="color:#fecaca;font-size:12px;margin:4px 0 0">Account update</p>
+        </div>
+        <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
+          <p style="margin:0 0 16px">Dear <strong>${lawyerName}</strong>,</p>
+          <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
+            Your HumRi lawyer account has been suspended by the platform administration.
+            You are no longer able to sign in to the lawyer portal until your account is reviewed and re-approved.
+          </p>
+          <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
+            If you believe this action is in error or if you need more information, please contact the HumRi support team.
+          </p>
+          <a href="${APP_URL}/auth/login"
+            style="display:inline-block;background:#991b1b;color:#fee2e2;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500;font-size:14px">
+            View login page →
           </a>
           <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0">
           <p style="margin:0;font-size:12px;color:#9ca3af">

@@ -27,9 +27,9 @@ export default function PendingPage() {
             <li>· You will be notified by email once approved</li>
           </ul>
         </div>
-        <div className="flex items-center justify-center gap-2 text-xs text-gray-400 mt-2">
-         <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
-          <Link href="/" className="hover:text-gray-600">
+        <div className="flex items-center justify-center gap-2 text-xs text-brand-600 mt-2">
+         <Image src="/humri.png" alt="HUMRI Logo" width={22} height={22} />
+          <Link href="/" className="hover:text-brand-800">
             Return to HUMRI home
           </Link>
         </div>

@@ -1,5 +1,7 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
+import User from "@/models/User";
 
 export default withAuth(
   function middleware(req) {
@@ -19,9 +21,13 @@ export default withAuth(
       return NextResponse.redirect(new URL("/admin", req.url));
     }
 
-    // Lawyer account not yet approved
-    if (token.role === "lawyer" && !token.isApproved) {
-      return NextResponse.redirect(new URL("/auth/pending", req.url));
+    // Lawyer account not yet approved or suspended after login
+    if (token.role === "lawyer") {
+      await connectDB();
+      const lawyer = await User.findById(token.id).select("isApproved").lean();
+      if (!lawyer?.isApproved) {
+        return NextResponse.redirect(new URL("/auth/pending", req.url));
+      }
     }
 
     return NextResponse.next();
@@ -31,7 +37,7 @@ export default withAuth(
       // Only run the middleware function above when a token exists
       authorized: ({ token }) => !!token,
     },
-  }
+  },
 );
 
 // Protect these route prefixes — public routes (/, /submit, /track, /auth/*) are excluded

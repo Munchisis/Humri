@@ -12,27 +12,27 @@ function getAdminEmails(): string[] {
     .filter(Boolean);
 }
 
-const SHORT_SESSION = 60 * 60 * 24;       // 1 day  — default (not "remembered")
-const LONG_SESSION  = 60 * 60 * 24 * 30;  // 30 days — "remember me" checked
+const SHORT_SESSION = 60 * 60 * 24; // 1 day  — default (not "remembered")
+const LONG_SESSION = 60 * 60 * 24 * 30; // 30 days — "remember me" checked
 
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
-    maxAge:   LONG_SESSION, // ceiling — actual expiry enforced via token.exp below
+    maxAge: LONG_SESSION, // ceiling — actual expiry enforced via token.exp below
   },
 
   pages: {
     signIn: "/auth/login",
-    error:  "/auth/login",
+    error: "/auth/login",
   },
 
   providers: [
     CredentialsProvider({
       name: "credentials",
       credentials: {
-        email:      { label: "Email",    type: "email"    },
-        password:   { label: "Password", type: "password" },
-        rememberMe: { label: "Remember me", type: "text"  }, // "true" | "false" string
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+        rememberMe: { label: "Remember me", type: "text" }, // "true" | "false" string
       },
 
       async authorize(credentials) {
@@ -40,9 +40,9 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Please enter your email and password.");
         }
 
-        const email         = credentials.email.toLowerCase();
-        const adminEmails   = getAdminEmails();
-        const isAdminEmail  = adminEmails.includes(email);
+        const email = credentials.email.toLowerCase();
+        const adminEmails = getAdminEmails();
+        const isAdminEmail = adminEmails.includes(email);
 
         await connectDB();
 
@@ -70,19 +70,19 @@ export const authOptions: NextAuthOptions = {
         // Lawyers not yet approved cannot log in
         if (user!.role === "lawyer" && !user!.isApproved) {
           throw new Error(
-            "Your account is pending approval. You will receive an email once an admin approves your registration."
+            "Your account is pending approval. You will receive an email once an admin approves your registration.",
           );
         }
 
         return {
-          id:            user!._id.toString(),
-          name:          user!.name,
-          email:         user!.email,
-          role:          user!.role,
-          isApproved:    user!.isApproved,
+          id: user!._id.toString(),
+          name: user!.name,
+          email: user!.email,
+          role: user!.role,
+          isApproved: user!.isApproved,
           emailVerified: user!.emailVerified,
           // pass through as a string so it survives the credentials round-trip
-          rememberMe:    credentials.rememberMe === "true",
+          rememberMe: credentials.rememberMe === "true",
         } as never;
       },
     }),
@@ -92,29 +92,47 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         const u = user as unknown as {
-          id: string; role: string; isApproved: boolean;
-          emailVerified: boolean; rememberMe: boolean;
+          id: string;
+          role: string;
+          isApproved: boolean;
+          emailVerified: boolean;
+          rememberMe: boolean;
         };
-        token.id            = u.id;
-        token.role          = u.role as never;
-        token.isApproved    = u.isApproved;
+        token.id = u.id;
+        token.role = u.role as never;
+        token.isApproved = u.isApproved;
         token.emailVerified = u.emailVerified;
 
         // Set a custom expiry based on rememberMe — short session unless checked
-        const maxAge   = u.rememberMe ? LONG_SESSION : SHORT_SESSION;
-        token.exp       = Math.floor(Date.now() / 1000) + maxAge;
+        const maxAge = u.rememberMe ? LONG_SESSION : SHORT_SESSION;
+        token.exp = Math.floor(Date.now() / 1000) + maxAge;
       }
       return token;
     },
 
     async session({ session, token }) {
       if (token) {
-        session.user.id            = token.id;
-        session.user.role          = token.role;
-        session.user.isApproved    = token.isApproved;
-        (session.user as Record<string, unknown>).emailVerified = token.emailVerified;
+        session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.isApproved = token.isApproved;
+        (session.user as Record<string, unknown>).emailVerified =
+          token.emailVerified;
       }
       return session;
     },
   },
 };
+
+export async function verifyLawyerApproved(
+  session: { user: { role?: string; id?: string } } | null | undefined,
+) {
+  if (!session || session.user.role !== "lawyer") {
+    return false;
+  }
+
+  await connectDB();
+  const lawyer = await User.findById(session.user.id)
+    .select("isApproved")
+    .lean();
+  return !!lawyer?.isApproved;
+}

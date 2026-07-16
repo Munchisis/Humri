@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
-import { sendLawyerApproved } from "@/lib/email";
+import { sendLawyerApproved, sendLawyerSuspended } from "@/lib/email";
 
 // ─── List all lawyers (admin only) ───────────────────────────────────────────
 
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   const approved = searchParams.get("approved");
 
   const query: Record<string, unknown> = { role: "lawyer" };
-  if (approved === "true")  query.isApproved = true;
+  if (approved === "true") query.isApproved = true;
   if (approved === "false") query.isApproved = false;
 
   const lawyers = await User.find(query)
@@ -43,7 +43,10 @@ export async function PATCH(req: NextRequest) {
   const { lawyerId, isApproved } = await req.json();
 
   if (!lawyerId || typeof isApproved !== "boolean") {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid request body." },
+      { status: 400 },
+    );
   }
 
   await connectDB();
@@ -51,12 +54,23 @@ export async function PATCH(req: NextRequest) {
   const lawyer = await User.findOneAndUpdate(
     { _id: lawyerId, role: "lawyer" },
     { isApproved },
-    { new: true, select: "-password" }
+    { new: true, select: "-password" },
   );
 
   if (isApproved && lawyer) {
     try {
       await sendLawyerApproved({
+        lawyerName: lawyer.name,
+        lawyerEmail: lawyer.email,
+      });
+    } catch (err) {
+      console.error("[EMAIL]", err);
+    }
+  }
+
+  if (!isApproved && lawyer) {
+    try {
+      await sendLawyerSuspended({
         lawyerName: lawyer.name,
         lawyerEmail: lawyer.email,
       });
