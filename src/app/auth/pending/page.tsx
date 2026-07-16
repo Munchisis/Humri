@@ -28,7 +28,7 @@ export default function PendingPage() {
           </ul>
         </div>
         <div className="flex items-center justify-center gap-2 text-xs text-brand-600 mt-2">
-         <Image src="/humri.png" alt="HUMRI Logo" width={22} height={22} />
+         <Image src="/humri.png" alt="HUMRI Logo" width={25} height={25} />
           <Link href="/" className="hover:text-brand-800">
             Return to HUMRI home
           </Link>
