@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { connectDB } from "@/lib/db";
+import { getPlatformSettings } from "@/lib/platform";
 import User from "@/models/User";
 import {
   sendEmailVerificationReminder,
@@ -8,14 +9,8 @@ import {
 } from "@/lib/email-governance";
 
 function isAuthorised(req: NextRequest) {
-  const secret = req.headers.get("x-cron-secret");
-  return secret === process.env.CRON_SECRET;
+  return req.headers.get("x-cron-secret") === process.env.CRON_SECRET;
 }
-
-const REMINDER_DAYS    = 7;
-const SUSPENSION_DAYS  = 14;
-const REMINDER_MS      = REMINDER_DAYS   * 24 * 60 * 60 * 1000;
-const SUSPENSION_MS    = SUSPENSION_DAYS * 24 * 60 * 60 * 1000;
 
 export async function GET(req: NextRequest) {
   if (!isAuthorised(req)) {
@@ -25,50 +20,59 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB();
 
-    const now              = new Date();
-    const reminderCutoff   = new Date(now.getTime() - REMINDER_MS);
+    // Read thresholds from platform settings
+    const settings = await getPlatformSettings();
+    const REMINDER_DAYS = 7; // always warn at day 7
+    const SUSPENSION_DAYS = settings.suspensionDays;
+    const REMINDER_MS = REMINDER_DAYS * 24 * 60 * 60 * 1000;
+    const SUSPENSION_MS = SUSPENSION_DAYS * 24 * 60 * 60 * 1000;
+
+    const now = new Date();
+    const reminderCutoff = new Date(now.getTime() - REMINDER_MS);
     const suspensionCutoff = new Date(now.getTime() - SUSPENSION_MS);
 
-    const results = {
-      reminders:   0,
-      suspensions: 0,
-      errors:      [] as string[],
-    };
+    const results = { reminders: 0, suspensions: 0, errors: [] as string[] };
 
-    // ── Find unverified approved lawyers ──────────────────────────────────────
+    // All approved lawyers with unverified emails
     const unverified = await User.find({
-      role:          "lawyer",
-      isApproved:    true,
+      role: "lawyer",
+      isApproved: true,
       emailVerified: { $ne: true },
-      createdAt:     { $lt: reminderCutoff }, // registered more than 7 days ago
+      createdAt: { $lt: reminderCutoff },
     }).select("+emailVerifyToken +emailVerifyExpires");
 
     for (const lawyer of unverified) {
       try {
         const age = now.getTime() - (lawyer.createdAt as Date).getTime();
 
-        // Always ensure there's a valid verify token (generate fresh if expired)
+        // Refresh token if expired
         let token = lawyer.emailVerifyToken;
-        if (!token || !lawyer.emailVerifyExpires || lawyer.emailVerifyExpires < now) {
+        if (
+          !token ||
+          !lawyer.emailVerifyExpires ||
+          lawyer.emailVerifyExpires < now
+        ) {
           token = crypto.randomBytes(32).toString("hex");
-          lawyer.emailVerifyToken   = token;
-          lawyer.emailVerifyExpires = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+          lawyer.emailVerifyToken = token;
+          lawyer.emailVerifyExpires = new Date(
+            now.getTime() + 7 * 24 * 60 * 60 * 1000,
+          );
           await lawyer.save();
         }
 
         if (age >= SUSPENSION_MS) {
-          // ── Suspend account ────────────────────────────────────────────────
+          // Suspend
           await User.findByIdAndUpdate(lawyer._id, { isApproved: false });
           await sendEmailVerificationSuspension({
-            name:  lawyer.name,
+            name: lawyer.name,
             email: lawyer.email,
             token,
           });
           results.suspensions++;
         } else if (age >= REMINDER_MS) {
-          // ── Send reminder (only once — between day 7 and day 14) ───────────
+          // Remind
           await sendEmailVerificationReminder({
-            name:  lawyer.name,
+            name: lawyer.name,
             email: lawyer.email,
             token,
           });
@@ -80,17 +84,18 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({
-      success:     true,
-      timestamp:   now.toISOString(),
-      reminders:   results.reminders,
+      success: true,
+      timestamp: now.toISOString(),
+      settings: { REMINDER_DAYS, SUSPENSION_DAYS },
+      reminders: results.reminders,
       suspensions: results.suspensions,
-      errors:      results.errors,
+      errors: results.errors,
     });
   } catch (err) {
     console.error("[CRON email-verification]", err);
     return NextResponse.json(
       { error: "Cron job failed.", details: String(err) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

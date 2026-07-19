@@ -3,6 +3,7 @@ import {
   ShieldCheck,
   ArrowRight,
   Users,
+  Scale,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/shared/themeToggle";
 import Image from "next/image";
@@ -14,7 +15,10 @@ export default function HomePage() {
       <nav className="border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Link href="/" className="w-10 h-10 dark:shadow-sm dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0">
+            <Link
+              href="/"
+              className="w-10 h-10 dark:shadow-sm dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0"
+            >
               <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
             </Link>
             <div>
@@ -56,37 +60,46 @@ export default function HomePage() {
       </nav>
 
       {/* Hero */}
-      <section className="bg-brand-800 text-white dark:bg-gray-900">
-        <div className="max-w-5xl mx-auto px-4 py-20 text-center">
-          <div className="inline-flex items-center gap-2 bg-brand-600 text-brand-100 text-xs px-4 py-1.5 rounded-full mb-6 font-medium tracking-wide">
-            <ShieldCheck className="w-3.5 h-3.5" />
+      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-950 via-brand-900 to-emerald-800 text-white dark:from-gray-950 dark:via-gray-900 dark:to-emerald-950">
+        {/* Watermark icon — signature element */}
+        <Scale
+          className="absolute -right-10 -top-10 w-72 h-72 text-white/[0.06] rotate-[12deg] pointer-events-none select-none"
+          strokeWidth={1}
+          aria-hidden="true"
+        />
+
+        <div className="relative max-w-5xl mx-auto px-4 py-20 text-center">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-emerald-100 text-xs px-4 py-1.5 rounded-full mb-6 font-medium tracking-wide border border-white/10">
+            <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
             Free · Confidential · Professional
           </div>
-          <h1 className="text-4xl md:text-5xl max-w-4xl font-black leading-tight mb-5 text-le tracking-wide mx-auto">
+
+          <h1 className="text-4xl md:text-5xl max-w-4xl font-black leading-tight mb-5 tracking-wide mx-auto">
             Justice should not depend on
             <br className="hidden md:block" /> what you can afford
           </h1>
-          <p className="text-brand-200 text-lg max-w-xl mx-auto mb-10 leading-relaxed">
+
+          <p className="text-emerald-100/80 text-lg max-w-xl mx-auto mb-10 leading-relaxed">
             HUMRI connects people facing legal challenges with qualified
             Nigerian volunteer lawyers, completely free of charge.
           </p>
+
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <Link
               href="/submit"
-              className="inline-flex items-center gap-2 bg-brand-100 text-brand-900 font-medium px-6 py-3 rounded-lg hover:bg-white transition-colors text-sm"
+              className="inline-flex items-center gap-2 bg-white text-emerald-900 font-medium px-6 py-3 rounded-lg hover:bg-emerald-50 transition-colors text-sm shadow-lg shadow-emerald-950/30"
             >
               Submit your matter <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/track"
-              className="border border-white/30 text-white font-medium px-6 py-3 rounded-xl hover:bg-white/10 hover:border-white/60 transition-all duration-200"
+              className="border border-white/30 text-white font-medium px-6 py-3 rounded-lg hover:bg-white/10 hover:border-white/60 transition-all duration-200"
             >
               Track existing matter
             </Link>
           </div>
         </div>
       </section>
-
       {/* Stats */}
       <section className="border-y border-gray-100 bg-gray-50 dark:bg-gray-900 dark:border-gray-700">
         <div className="max-w-5xl mx-auto px-4 py-8 grid grid-cols-3 gap-4 text-center">
@@ -184,7 +197,7 @@ export default function HomePage() {
 
       {/* Lawyer CTA */}
       <section className="max-w-5xl mx-auto px-4 py-20">
-        <div className="bg-brand-800 rounded-2xl p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className=" bg-gradient-to-br from-green-950 via-green-800 to-brand-800 rounded-2xl p-10 flex flex-col md:flex-row items-center justify-between gap-6 dark:from-gray-950 dark:via-gray-900 dark:to-emerald-950">
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Users className="w-5 h-5 text-white/70" />

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
+import { getPlatformSettings } from "@/lib/platform";
 import Matter from "@/models/Matter";
 import User from "@/models/User";
 import {
@@ -9,21 +10,13 @@ import {
   sendAdminMatterReleased,
 } from "@/lib/email-governance";
 
-// Vercel cron calls this with a secret header to prevent public access
 function isAuthorised(req: NextRequest) {
-  const secret = req.headers.get("x-cron-secret");
-  return secret === process.env.CRON_SECRET;
+  return req.headers.get("x-cron-secret") === process.env.CRON_SECRET;
 }
 
-const STALE_DAYS         = 7;   // auto-release after this many days
-const REMINDER_DAYS      = 5;   // send a warning reminder at this point
-const STALE_MS           = STALE_DAYS    * 24 * 60 * 60 * 1000;
-const REMINDER_MS        = REMINDER_DAYS * 24 * 60 * 60 * 1000;
-
-// Stages that cannot be auto-released — too late to hand off safely
-const PROTECTED_STAGES   = ["hearing", "awaiting_judgment", "completed"];
-// Statuses that indicate active engagement
-const ACTIVE_STATUSES    = ["assigned", "in_progress", "under_review"];
+// Stages that are too late to auto-release
+const PROTECTED_STAGES  = ["hearing", "awaiting_judgment", "completed"];
+const ACTIVE_STATUSES   = ["assigned", "in_progress", "under_review"];
 
 export async function GET(req: NextRequest) {
   if (!isAuthorised(req)) {
@@ -33,41 +26,35 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB();
 
-    const now            = new Date();
-    const staleThreshold = new Date(now.getTime() - STALE_MS);
-    const reminderThreshold = new Date(now.getTime() - REMINDER_MS);
+    // Read thresholds from platform settings
+    const settings        = await getPlatformSettings();
+    const STALE_DAYS      = settings.staleMatterDays;
+    const REMINDER_DAYS   = settings.reminderDays;
+    const STALE_MS        = STALE_DAYS    * 24 * 60 * 60 * 1000;
+    const REMINDER_MS     = REMINDER_DAYS * 24 * 60 * 60 * 1000;
 
-    // Find all active matters not updated recently
-    const staleMatters = await Matter.find({
-      status:        { $in: ACTIVE_STATUSES },
-      stage:         { $nin: PROTECTED_STAGES },
-      assignedLawyer: { $exists: true },
-      updatedAt:     { $lt: staleThreshold },
-    }).populate("assignedLawyer", "name email");
+    const now                = new Date();
+    const staleThreshold     = new Date(now.getTime() - STALE_MS);
+    const reminderThreshold  = new Date(now.getTime() - REMINDER_MS);
 
-    // Find matters approaching the stale threshold (reminder only)
+    const results = { autoReleased: 0, reminders: 0, errors: [] as string[] };
+
+    // ── Reminder: matters approaching stale (between reminderDays and staleDays) ──
     const reminderMatters = await Matter.find({
-      status:        { $in: ACTIVE_STATUSES },
-      stage:         { $nin: PROTECTED_STAGES },
-      assignedLawyer: { $exists: true },
-      updatedAt:     { $lt: reminderThreshold, $gte: staleThreshold },
+      status:                  { $in: ACTIVE_STATUSES },
+      stage:                   { $nin: PROTECTED_STAGES },
+      assignedLawyer:          { $exists: true },
+      updatedAt:               { $lt: reminderThreshold, $gte: staleThreshold },
       staleMatterReminderSent: { $ne: true },
     }).populate("assignedLawyer", "name email");
 
-    const results = {
-      autoReleased: 0,
-      remindersent: 0,
-      errors:       [] as string[],
-    };
-
-    // ── Send reminders for approaching-stale matters ──
     for (const matter of reminderMatters) {
       try {
         const lawyer = matter.assignedLawyer as unknown as {
           _id: string; name: string; email: string;
         };
         const daysSince = Math.floor(
-          (now.getTime() - (matter as any).updatedAt.getTime()) / (24 * 60 * 60 * 1000)
+          (now.getTime() - ((matter as any).updatedAt as Date).getTime()) / (24 * 60 * 60 * 1000)
         );
 
         await sendStaleMatterReminder({
@@ -79,18 +66,24 @@ export async function GET(req: NextRequest) {
           daysSinceAssigned: daysSince,
         });
 
-        // Mark reminder sent so we don't spam
         await Matter.findByIdAndUpdate(matter._id, {
           staleMatterReminderSent: true,
         });
 
-        results.remindersent++;
+        results.reminders++;
       } catch (err) {
-        results.errors.push(`Reminder for ${matter.referenceNumber}: ${String(err)}`);
+        results.errors.push(`Reminder ${matter.referenceNumber}: ${String(err)}`);
       }
     }
 
-    // ── Auto-release stale matters ──
+    // ── Auto-release: matters past the stale threshold ────────────────────────
+    const staleMatters = await Matter.find({
+      status:          { $in: ACTIVE_STATUSES },
+      stage:           { $nin: PROTECTED_STAGES },
+      assignedLawyer:  { $exists: true },
+      updatedAt:       { $lt: staleThreshold },
+    }).populate("assignedLawyer", "name email");
+
     const admins = await User.find({ role: "admin" }).select("email").lean();
 
     for (const matter of staleMatters) {
@@ -110,7 +103,7 @@ export async function GET(req: NextRequest) {
           $unset: { assignedLawyer: "" },
         });
 
-        // Decrement lawyer active count
+        // Decrement lawyer's active count
         await User.findByIdAndUpdate(lawyer._id, {
           $inc: { activeMatters: -1 },
         });
@@ -143,15 +136,16 @@ export async function GET(req: NextRequest) {
 
         results.autoReleased++;
       } catch (err) {
-        results.errors.push(`Auto-release for ${matter.referenceNumber}: ${String(err)}`);
+        results.errors.push(`Auto-release ${matter.referenceNumber}: ${String(err)}`);
       }
     }
 
     return NextResponse.json({
       success:      true,
       timestamp:    now.toISOString(),
+      settings:     { STALE_DAYS, REMINDER_DAYS },
       autoReleased: results.autoReleased,
-      reminders:    results.remindersent,
+      reminders:    results.reminders,
       errors:       results.errors,
     });
   } catch (err) {

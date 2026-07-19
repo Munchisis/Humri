@@ -5,6 +5,7 @@ import { Search, Filter, Loader2, RefreshCw } from "lucide-react";
 import { statusLabels, urgencyStyles, urgencyLabels } from "@/lib/utils";
 import { MATTER_TYPES } from "@/types";
 import type { IMatter, MatterStatus, MatterUrgency } from "@/types";
+import Link from "next/link";
 
 const STATUS_OPTIONS: MatterStatus[] = [
   "unassigned",
@@ -166,8 +167,7 @@ export default function AdminMattersPage() {
       <div className="lg:hidden space-y-3">
         {filtered.map((m) => {
           const lawyer = m.assignedLawyer as
-            | { _id: string; name: string }
-            | undefined;
+            { _id: string; name: string } | undefined;
           return (
             <div key={m._id} className="card">
               <div className="flex items-start justify-between gap-3 mb-3">
@@ -275,8 +275,7 @@ export default function AdminMattersPage() {
                 <tbody className="divide-y divide-gray-50 dark:divide-green-800/50">
                   {filtered.map((m) => {
                     const lawyer = m.assignedLawyer as
-                      | { _id: string; name: string }
-                      | undefined;
+                      { _id: string; name: string } | undefined;
                     return (
                       <tr
                         key={m._id}
@@ -338,11 +337,19 @@ export default function AdminMattersPage() {
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          <div className="text-xs text-gray-400">
-                            {new Date(m.createdAt).toLocaleDateString("en-NG", {
-                              day: "numeric",
-                              month: "short",
-                            })}
+                          <div className="flex flex-col gap-1">
+                            <span className="text-xs text-gray-400">
+                              {new Date(m.createdAt).toLocaleDateString(
+                                "en-NG",
+                                { day: "numeric", month: "short" },
+                              )}
+                            </span>
+                            <Link
+                              href={`/admin/matters/${m._id}`}
+                              className="text-xs text-brand-600 dark:text-brand-400 hover:underline font-medium"
+                            >
+                              View →
+                            </Link>
                           </div>
                         </td>
                       </tr>

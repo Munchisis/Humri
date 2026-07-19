@@ -1,5 +1,6 @@
 "use client";
 
+import { Eye, EyeOff } from "lucide-react";
 import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -43,7 +44,17 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#05150d] via-green-950 to-green-800 dark:bg-gray-950 flex items-center justify-center p-4 overflow-hidden relative">
+      {/* Top Left Dark Circle */}
+      <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-[#c9ded1] opacity-5" />
+      {/* Bottom Right Light Circle */}
+      <div className="absolute -bottom-1 -right-1 h-80 w-80 rounded-full bg-[#c9ded1] opacity-5" />
+
+      {/* Bottom Right Accent Block/Shape */}
+      <div className="absolute bottom-0 right-0 h-full w-40 bg-[#07160e] opacity-50 mix-blend-multiply" />
+      {/* Bottom Right Accent Block/Shape */}
+      <div className="absolute bottom-0 right-0 h-40 w-full bg-[#07160e] opacity-50 mix-blend-multiply" />
+
       <div className="w-full max-w-md">
         <div className="flex items-center gap-3 justify-center mb-8">
           <Link
@@ -55,23 +66,21 @@ function LoginForm() {
           <div>
             <Link
               href="/"
-              className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-none"
+              className="text-lg font-semibold text-gray-100 leading-none"
             >
               HUMRI
             </Link>
-            <div className="text-xs text-gray-400 tracking-wide uppercase mt-0.5">
+            <div className="text-xs text-gray-300 tracking-wide uppercase mt-0.5">
               Pro bono legal aid
             </div>
           </div>
         </div>
 
-        <div className="card">
-          <h1 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-1">
-            Sign in
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-            Lawyer and admin access only.{" "}
-            <Link href="/submit" className="text-brand-600 hover:underline">
+        <div className="card border border-white/10 bg-white/[0.03] p-8 shadow-2xl backdrop-blur-xl ring-1 ring-black/20">
+          <h1 className="text-xl font-medium text-gray-100 mb-1">Sign in</h1>
+          <p className="text-sm text-gray-500 mb-6">
+            Lawyer access only.{" "}
+            <Link href="/submit" className="text-brand-400 hover:underline">
               Submit a matter instead →
             </Link>
           </p>
@@ -85,10 +94,10 @@ function LoginForm() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="label">Email address</label>
+              <label className="label text-gray-400">Email address</label>
               <input
                 type="email"
-                className="input"
+                className="input border border-white/10 bg-white/[0.02] px-4 py-3 text-white placeholder-white/30 outline-none transition-all backdrop-blur-sm focus:border-brand-400 focus:bg-white/[0.07] focus:ring-1 focus:ring-white/30"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -99,10 +108,10 @@ function LoginForm() {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="label mb-0">Password</label>
+                <label className="label text-gray-400 mb-0">Password</label>
                 <Link
                   href="/auth/forgot-password"
-                  className="text-xs text-brand-600 hover:underline"
+                  className="text-xs text-brand-400 hover:underline"
                 >
                   Forgot password?
                 </Link>
@@ -110,7 +119,7 @@ function LoginForm() {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
-                  className="input pr-10"
+                  className="input border border-white/10 bg-white/[0.02] px-4 py-3 text-white placeholder-white/30 outline-none transition-all backdrop-blur-sm focus:border-brand-400 focus:bg-white/[0.07] focus:ring-1 focus:ring-white/30"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -125,34 +134,9 @@ function LoginForm() {
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-4 h-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                      <line x1="1" y1="1" x2="23" y2="23" />
-                    </svg>
+                    <EyeOff className="w-4 h-4" />
                   ) : (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-4 h-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
+                    <Eye className="w-4 h-4" />
                   )}
                 </button>
               </div>
@@ -165,7 +149,7 @@ function LoginForm() {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-brand-600 focus:ring-brand-400"
               />
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm text-gray-400">
                 Remember me for 30 days
               </span>
             </label>
@@ -186,11 +170,11 @@ function LoginForm() {
           </form>
         </div>
 
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-5">
+        <p className="text-center text-sm text-gray-400 mt-5">
           Volunteer lawyer?{" "}
           <Link
             href="/auth/register"
-            className="text-brand-600 hover:underline font-medium"
+            className="text-gray-200 hover:underline font-medium"
           >
             Apply to join →
           </Link>
@@ -207,3 +191,7 @@ export default function LoginPage() {
     </Suspense>
   );
 }
+
+
+
+    
