@@ -11,8 +11,7 @@ const RegisterSchema = z.object({
     password: z.string()
       .min(8, "Password must be at least 8 characters")
       .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-      .regex(/[!@#$%^&*(),.?":{}|<>]/,
-        "Password must contain at least one special character",
+      .regex(/[!@#$%^&*(),.?":{}|<>]/,"Password must contain at least one special character",
       ),
     confirmPassword: z.string(),
     barNumber: z.string().min(3, "Please enter your Supreme Court Number"),
