@@ -8,7 +8,7 @@ import { Analytics } from "@vercel/analytics/next";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "HUMRI — Pro Bono Legal Aid",
+  title: "HUMRI —  Access To Justice",
   description:
     "Connect with qualified volunteer lawyers. Free, confidential legal help for everyone regardless of means.",
   other: {

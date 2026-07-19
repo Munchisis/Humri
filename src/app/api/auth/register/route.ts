@@ -5,14 +5,26 @@ import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import { sendEmailVerification } from "@/lib/email-auth";
 
-const RegisterSchema = z.object({
-  name:           z.string().min(2, "Name must be at least 2 characters"),
-  email:          z.string().email("Please enter a valid email address"),
-  password:       z.string().min(8, "Password must be at least 8 characters"),
-  barNumber:      z.string().min(3, "Please enter your NBA bar number"),
-  specialisation: z.string().min(2, "Please enter your area of specialisation"),
-  state:          z.string().min(2, "Please enter your state"),
-});
+export const RegisterSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email address"),
+    password: z.string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/[!@#$%^&*(),.?":{}|<>]/,
+        "Password must contain at least one special character",
+      ),
+    confirmPassword: z.string(),
+    barNumber: z.string().min(3, "Please enter your Supreme Court Number"),
+    specialisation: z
+      .string()
+      .min(2, "Please enter your area of specialisation"),
+    state: z.string().min(2, "Please enter your state"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"], 
+  });
 
 export async function POST(req: NextRequest) {
   try {
