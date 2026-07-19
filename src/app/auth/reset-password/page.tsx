@@ -70,7 +70,7 @@ function ResetPasswordForm() {
               HUMRI
             </div>
             <div className="text-xs text-gray-400 tracking-wide uppercase mt-0.5">
-              Pro bono legal aid
+              ACCESS TO JUSTICE
             </div>
           </div>
         </div>

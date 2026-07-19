@@ -45,8 +45,7 @@ export default function ForgotPasswordPage() {
               HUMRI
             </div>
             <div className="text-xs text-gray-400 tracking-wide uppercase mt-0.5">
-              HUMAN RIGHTS. HUMAN DIGNITY.
-              <span className="text-orange-500">JUSTICE FOR ALL.</span>
+              ACCESS TO JUSTICE
             </div>
           </div>
         </div>

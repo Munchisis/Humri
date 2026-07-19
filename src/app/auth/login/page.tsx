@@ -44,16 +44,16 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#05150d] via-green-950 to-green-800 dark:bg-gray-950 flex items-center justify-center p-4 overflow-hidden relative">
+    <div className="min-h-screen bg-gradient-to-br from-[#05150d] via-green-950 to-green-800 dark:bg-gradient-to-b dark:from-[#010e07] dark:to-[#01371b] flex items-center justify-center p-4 overflow-hidden relative">
       {/* Top Left Dark Circle */}
-      <div className="absolute -top-32 -left-32  h-96 w-96 rounded-full bg-[#c9ded1] opacity-5" />
+      <div className="absolute -top-32 -left-32  h-96 w-96 rounded-full bg-[#c9ded1] dark:bg-[#616a63] opacity-5" />
       {/* Bottom Right Light Circle */}
-      <div className="absolute -bottom-1 -right-1 h-80 w-80 rounded-full bg-[#c9ded1] opacity-5" />
+      <div className="absolute -bottom-1 -right-1 h-80 w-80 rounded-full bg-[#c9ded1] dark:bg-[#616a63] opacity-5" />
 
       {/* Bottom Right Accent Block/Shape */}
-      <div className="absolute bottom-0 right-0 h-full sm:w-40 lg:w-20 w-10 bg-[#07160e] opacity-50 mix-blend-multiply" />
+      <div className="absolute bottom-0 right-0 h-full sm:w-40 lg:w-20 w-10 bg-[#07160e] dark:bg-[#7ee9a3] opacity-50 mix-blend-multiply" />
       {/* Bottom Right Accent Block/Shape */}
-      <div className="absolute bottom-0 right-0 sm:h-40 lg:h-20  h-10 w-full bg-[#07160e] opacity-50 mix-blend-multiply" />
+      <div className="absolute bottom-0 right-0 sm:h-40 lg:h-20  h-10 w-full bg-[#07160e] dark:bg-[#5ace82] opacity-50 mix-blend-multiply" />
 
       <div className="w-full max-w-md">
         <div className="flex items-center gap-3 justify-center mb-8">
@@ -71,7 +71,7 @@ function LoginForm() {
               HUMRI
             </Link>
             <div className="text-xs text-gray-300 tracking-wide uppercase mt-0.5">
-              Pro bono legal aid
+              ACCESS TO JUSTICE
             </div>
           </div>
         </div>

@@ -29,8 +29,7 @@ export default function HomePage() {
                 HUMRI
               </Link>
               <div className="hidden md:block text-[10px] text-gray-400 mt-0.5">
-                HUMAN RIGHTS. HUMAN DIGNITY.
-                <span className="text-orange-500">JUSTICE FOR ALL.</span>
+                ACCESS TO JUSTICE
               </div>
             </div>
           </div>
@@ -131,7 +130,7 @@ export default function HomePage() {
             {
               step: "01",
               title: "Describe your matter",
-              desc: "Fill in a short form explaining your situation. No legal jargon needed.",
+              desc: "Fill in a short form explaining your situation. Make it concise and direct.",
             },
             {
               step: "02",
@@ -228,7 +227,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
           <div className="flex flex-col  gap-2">
             <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
-            <span>HUMRI — HUMAN RIGHTS. HUMAN DIGNITY.JUSTICE FOR ALL.</span>
+            <span>HUMRI — ACCESS TO JUSTICE.</span>
           </div>
           <div className="flex gap-4">
             <Link

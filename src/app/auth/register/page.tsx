@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { CheckCircle, AlertCircle, Loader2, Scale } from "lucide-react";
 import Image from "next/image";
 
 const SPECIALISATIONS = [
@@ -18,11 +18,43 @@ const SPECIALISATIONS = [
 ];
 
 const NIGERIAN_STATES = [
-  "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
-  "Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo",
-  "Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa",
-  "Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba",
-  "Yobe","Zamfara",
+  "Abia",
+  "Adamawa",
+  "Akwa Ibom",
+  "Anambra",
+  "Bauchi",
+  "Bayelsa",
+  "Benue",
+  "Borno",
+  "Cross River",
+  "Delta",
+  "Ebonyi",
+  "Edo",
+  "Ekiti",
+  "Enugu",
+  "FCT",
+  "Gombe",
+  "Imo",
+  "Jigawa",
+  "Kaduna",
+  "Kano",
+  "Katsina",
+  "Kebbi",
+  "Kogi",
+  "Kwara",
+  "Lagos",
+  "Nasarawa",
+  "Niger",
+  "Ogun",
+  "Ondo",
+  "Osun",
+  "Oyo",
+  "Plateau",
+  "Rivers",
+  "Sokoto",
+  "Taraba",
+  "Yobe",
+  "Zamfara",
 ];
 
 export default function RegisterPage() {
@@ -35,6 +67,12 @@ export default function RegisterPage() {
     specialisation: "",
     state: "",
   });
+
+  // Dynamic password criteria tracked live against form state
+  const isLongEnough = form.password.length >= 8;
+  const hasUpper = /[A-Z]/.test(form.password);
+  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(form.password);
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -43,15 +81,14 @@ export default function RegisterPage() {
   const [hasConsented, setHasConsented] = useState<boolean>(false);
   const [consentError, setConsentError] = useState<string>("");
 
-    const handleCheckboxChange = (
-      e: React.ChangeEvent<HTMLInputElement>,
-    ): void => {
-      setHasConsented(e.target.checked);
-
-      if (e.target.checked) {
-        setConsentError("");
-      }
-    };
+  const handleCheckboxChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ): void => {
+    setHasConsented(e.target.checked);
+    if (e.target.checked) {
+      setConsentError("");
+    }
+  };
 
   function update(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -60,6 +97,12 @@ export default function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    // Front-end structural security checks matching the API validation constraints
+    if (!isLongEnough || !hasUpper || !hasSpecial) {
+      setError("Password does not meet the specified security criteria.");
+      return;
+    }
 
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match.");
@@ -73,30 +116,35 @@ export default function RegisterPage() {
       return;
     }
 
-
     setLoading(true);
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        barNumber: form.barNumber,
-        specialisation: form.specialisation,
-        state: form.state,
-      }),
-    });
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          confirmPassword: form.confirmPassword,
+          barNumber: form.barNumber,
+          specialisation: form.specialisation,
+          state: form.state,
+        }),
+      });
 
-    const data = await res.json();
-    setLoading(false);
+      const data = await res.json();
 
-    if (!res.ok) {
-      setError(data.error ?? "Registration failed. Please try again.");
-      return;
+      if (!res.ok) {
+        setError(data.error ?? "Registration failed. Please try again.");
+        return;
+      }
+
+      setSuccess(true);
+    } catch {
+      setError("Something went wrong. Check your connection and try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setSuccess(true);
   }
 
   if (success) {
@@ -108,7 +156,7 @@ export default function RegisterPage() {
           </div>
           <h1 className="text-xl font-medium mb-2">Application submitted</h1>
           <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-            Thank you for applying to volunteer with Lex Gratis. Your account is
+            Thank you for applying to volunteer with Humri. Your account is
             pending review by an admin. You will receive an email once your
             account is approved.
           </p>
@@ -124,21 +172,32 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg">
+    <div className="relative min-h-screen bg-gradient-to-b from-emerald-50/40 to-white dark:from-gray-950 dark:to-gray-900 flex items-center justify-center p-4 overflow-hidden">
+      <Scale
+        className="absolute -left-16 -bottom-16 w-80 h-80 text-emerald-900/[0.04] dark:text-emerald-100/[0.04] rotate-[-8deg] pointer-events-none select-none"
+        strokeWidth={1}
+        aria-hidden="true"
+      />
+
+      <div className="relative w-full max-w-lg">
         <div className="flex items-center gap-3 justify-center mb-8">
-          <div className="w-10 h-10 dark:shadow-sm dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0">
+          <Link
+            href="/"
+            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 ring-1 ring-emerald-900/10 dark:ring-emerald-100/10"
+          >
             <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
-          </div>
+          </Link>
           <div>
-            <div className="text-lg font-semibold leading-none">Lex Gratis</div>
+            <Link href="/" className="text-lg font-semibold leading-none">
+              HUMRI
+            </Link>
             <div className="text-xs text-gray-400 tracking-wide uppercase mt-0.5">
               Volunteer lawyer registration
             </div>
           </div>
         </div>
 
-        <div className="card">
+        <div className="card border border-emerald-900/5 shadow-emerald-900/5 shadow-xl">
           <h1 className="text-xl font-medium mb-1">
             Join as a volunteer lawyer
           </h1>
@@ -149,20 +208,22 @@ export default function RegisterPage() {
 
           {error && (
             <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-5">
-              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <AlertCircle
+                className="w-4 h-4 mt-0.5 shrink-0"
+                aria-hidden="true"
+              />
               <span>{error}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Personal info */}
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
                 <label className="label">
                   Full name<span className="text-red-500">*</span>
                 </label>
                 <input
-                  className="input"
+                  className="input focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   placeholder="Chidi Okoro"
                   required
                   value={form.name}
@@ -175,33 +236,71 @@ export default function RegisterPage() {
                 </label>
                 <input
                   type="email"
-                  className="input"
+                  autoComplete="email"
+                  className="input focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   placeholder="chidi@example.com"
                   required
                   value={form.email}
                   onChange={(e) => update("email", e.target.value)}
                 />
               </div>
-              <div>
+
+              {/* Password Input Block */}
+              <div className="col-span-2 sm:col-span-1">
                 <label className="label">
                   Password<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="password"
-                  className="input"
+                  autoComplete="new-password"
+                  className="input focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   placeholder="Min. 8 characters"
                   required
                   value={form.password}
                   onChange={(e) => update("password", e.target.value)}
                 />
+
+                {/* Visual Feedback Requirement List */}
+                <ul className="text-[11px] mt-2 space-y-1 p-2 bg-gray-900/5 dark:bg-slate-900 rounded border border-gray-100 dark:border-slate-800">
+                  <li
+                    className={
+                      isLongEnough
+                        ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                        : "text-red-500 opacity-70"
+                    }
+                  >
+                    {isLongEnough ? "✓" : "✗"} Minimum 8 characters
+                  </li>
+                  <li
+                    className={
+                      hasUpper
+                        ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                        : "text-red-500 opacity-70"
+                    }
+                  >
+                    {hasUpper ? "✓" : "✗"} Contains an uppercase letter
+                  </li>
+                  <li
+                    className={
+                      hasSpecial
+                        ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                        : "text-red-500 opacity-70"
+                    }
+                  >
+                    {hasSpecial ? "✓" : "✗"} Contains a special character
+                  </li>
+                </ul>
               </div>
-              <div>
+
+              {/* Confirm Password Input Block */}
+              <div className="col-span-2 sm:col-span-1">
                 <label className="label">
                   Confirm password<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="password"
-                  className="input"
+                  autoComplete="new-password"
+                  className="input focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   placeholder="Repeat password"
                   required
                   value={form.confirmPassword}
@@ -210,8 +309,9 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <div className="border-t border-gray-100 pt-4">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
+            <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
+              <p className="flex items-center gap-1.5 text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
+                <Scale className="w-3.5 h-3.5" aria-hidden="true" />
                 Professional details
               </p>
               <div className="grid grid-cols-2 gap-3">
@@ -220,7 +320,7 @@ export default function RegisterPage() {
                     SCN Number<span className="text-red-500">*</span>
                   </label>
                   <input
-                    className="input"
+                    className="input focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     placeholder="e.g. SCN123456"
                     required
                     value={form.barNumber}
@@ -232,7 +332,7 @@ export default function RegisterPage() {
                     State<span className="text-red-500">*</span>
                   </label>
                   <select
-                    className="input"
+                    className="input focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     required
                     value={form.state}
                     onChange={(e) => update("state", e.target.value)}
@@ -251,7 +351,7 @@ export default function RegisterPage() {
                     <span className="text-red-500">*</span>
                   </label>
                   <select
-                    className="input"
+                    className="input focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     required
                     value={form.specialisation}
                     onChange={(e) => update("specialisation", e.target.value)}
@@ -265,16 +365,15 @@ export default function RegisterPage() {
                   </select>
                 </div>
               </div>
-              {/* Consent Box Section */}
-              <div className="border-t border-gray-100 pt-4 dark:border-gray-800 space-y-2">
+
+              <div className="border-t border-gray-100 dark:border-gray-800 pt-4 mt-4 space-y-2">
                 <div className="flex items-start gap-2.5 text-sm text-gray-600 dark:text-gray-300">
-                  {/* The Checkbox element */}
                   <input
                     type="checkbox"
                     id="legal-consent"
                     checked={hasConsented}
                     onChange={handleCheckboxChange}
-                    className="mt-1 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                    className="mt-1 h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                   />
                   <label
                     htmlFor="legal-consent"
@@ -284,7 +383,7 @@ export default function RegisterPage() {
                     <Link
                       href="/legal/terms"
                       target="_blank"
-                      className="text-brand-600 font-medium underline hover:text-brand-700"
+                      className="text-emerald-700 font-medium underline hover:text-emerald-800"
                     >
                       Terms of Use
                     </Link>{" "}
@@ -292,7 +391,7 @@ export default function RegisterPage() {
                     <Link
                       href="/legal/privacy"
                       target="_blank"
-                      className="text-brand-600 font-medium underline hover:text-brand-700"
+                      className="text-emerald-700 font-medium underline hover:text-emerald-800"
                     >
                       Privacy Policy
                     </Link>
@@ -300,26 +399,30 @@ export default function RegisterPage() {
                   </label>
                 </div>
 
-                {/* Consent Warning Message */}
                 {consentError && (
-                  <div className="flex items-start gap-2 text-rose-500 text-sm font-medium pt-1 animate-pulse">
-                    <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  <div className="flex items-start gap-2 text-rose-500 text-sm font-medium pt-1">
+                    <AlertCircle
+                      className="w-3.5 h-3.5 mt-0.5 shrink-0"
+                      aria-hidden="true"
+                    />
                     <span>{consentError}</span>
                   </div>
                 )}
               </div>
-              {/* Consent Warning Message */}
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="btn btn-primary w-full justify-center py-2.5 mt-1"
+              className="btn w-full justify-center py-2.5 mt-1 bg-emerald-800 hover:bg-emerald-900 text-white transition-colors disabled:opacity-60"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Submitting
-                  application…
+                  <Loader2
+                    className="w-4 h-4 animate-spin"
+                    aria-hidden="true"
+                  />{" "}
+                  Submitting application…
                 </>
               ) : (
                 "Submit application"
@@ -332,7 +435,7 @@ export default function RegisterPage() {
           Already have an account?{" "}
           <Link
             href="/auth/login"
-            className="text-brand-600 hover:underline font-medium"
+            className="text-emerald-700 hover:underline font-medium"
           >
             Sign in →
           </Link>
