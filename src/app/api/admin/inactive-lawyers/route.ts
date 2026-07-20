@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import Matter from "@/models/Matter";
+import { IMatter } from "@/types";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -24,38 +25,43 @@ export async function GET() {
   // For each lawyer, find their most recently updated matter
   const results = await Promise.all(
     lawyers.map(async (lawyer) => {
-      const latestMatter = await Matter.findOne({ assignedLawyer: lawyer._id })
+      // Cast the lean query result to a Pick utility matching your select statement
+      const latestMatter = (await Matter.findOne({ assignedLawyer: lawyer._id })
         .sort({ updatedAt: -1 })
         .select("updatedAt status stage referenceNumber")
-        .lean();
+        .lean()) as Pick<
+        IMatter,
+        "updatedAt" | "status" | "stage" | "referenceNumber"
+      > | null;
 
       const lastActive = latestMatter?.updatedAt ?? (lawyer.createdAt as Date);
-      const daysSince  = Math.floor(
-        (now.getTime() - new Date(lastActive).getTime()) / (24 * 60 * 60 * 1000)
+      const daysSince = Math.floor(
+        (now.getTime() - new Date(lastActive).getTime()) /
+          (24 * 60 * 60 * 1000),
       );
-
       const activeMatterCount = await Matter.countDocuments({
         assignedLawyer: lawyer._id,
         status: { $in: ["assigned", "in_progress", "under_review"] },
       });
 
       return {
-        _id:              lawyer._id.toString(),
-        name:             lawyer.name,
-        email:            lawyer.email,
-        specialisation:   lawyer.specialisation,
-        state:            lawyer.state,
-        barNumber:        lawyer.barNumber,
-        emailVerified:    lawyer.emailVerified,
-        activeMatters:    activeMatterCount,
+        _id: lawyer._id.toString(),
+        name: lawyer.name,
+        email: lawyer.email,
+        specialisation: lawyer.specialisation,
+        state: lawyer.state,
+        barNumber: lawyer.barNumber,
+        emailVerified: lawyer.emailVerified,
+        activeMatters: activeMatterCount,
         completedMatters: lawyer.completedMatters,
-        lastActive:       lastActive,
-        daysSinceActive:  daysSince,
-        totalClaimed:     activeMatterCount + lawyer.completedMatters,
-        isInactive:       daysSince > 30 || (activeMatterCount === 0 && daysSince > 7),
-        joinedAt:         lawyer.createdAt,
+        lastActive: lastActive,
+        daysSinceActive: daysSince,
+        totalClaimed: activeMatterCount + lawyer.completedMatters,
+        isInactive:
+          daysSince > 30 || (activeMatterCount === 0 && daysSince > 7),
+        joinedAt: lawyer.createdAt,
       };
-    })
+    }),
   );
 
   // Sort: most inactive first
