@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/db";
 import User, { IUserDocument } from "@/models/User";
 
 // Comma-separated list of admin emails from .env.local
-// e.g. ADMIN_EMAILS=admin@lexgratis.ng,emuchay@gmail.com
+// e.g. ADMIN_EMAILS=admin@humri.org,example@gmail.com
 function getAdminEmails(): string[] {
   return (process.env.ADMIN_EMAILS ?? "")
     .split(",")

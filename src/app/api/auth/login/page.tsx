@@ -44,9 +44,9 @@ function LoginForm() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center gap-3 justify-center mb-8">
-          <div className="w-10 h-10 bg-brand-800 rounded-xl flex items-center justify-center">
+          <Link href="/" className="w-10 h-10 bg-brand-800 rounded-xl flex items-center justify-center">
             <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
-          </div>
+          </Link>
           <div>
             <div className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-none">
               HUMRI
