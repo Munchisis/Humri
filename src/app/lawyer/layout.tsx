@@ -21,6 +21,7 @@ export default async function LawyerLayout({
     redirect("/auth/pending");
   }
 
+  await connectDB();
   const currentUser = await User.findById(session.user.id)
     .select("isApproved")
     .lean();
