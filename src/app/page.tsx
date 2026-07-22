@@ -229,7 +229,7 @@ export default function HomePage() {
             <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
             <span>HUMRI — ACCESS TO JUSTICE.</span>
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap justify-center gap-4">
             <Link
               href="/about"
               className="hover:text-gray-600 dark:hover:text-gray-200"
@@ -244,13 +244,13 @@ export default function HomePage() {
             </Link>
             <Link
               href="/submit"
-              className="hover:text-gray-600 dark:hover:text-gray-200"
+              className="hidden sm:inline hover:text-gray-600 dark:hover:text-gray-200"
             >
               Submit matter
             </Link>
             <Link
               href="/track"
-              className="hover:text-gray-600 dark:hover:text-gray-200"
+              className="hidden sm:inline hover:text-gray-600 dark:hover:text-gray-200"
             >
               Track matter
             </Link>

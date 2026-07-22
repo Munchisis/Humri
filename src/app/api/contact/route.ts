@@ -8,11 +8,20 @@ import {
 } from "@/lib/email-auth";
 
 const ContactSchema = z.object({
-  name: z.string().trim().min(2, "Please enter your name"),
+  name: z.string().trim().min(2, "Please enter your name").max(200),
   email: z.string().trim().toLowerCase().email("Please enter a valid email address"),
-  subject: z.string().trim().min(3, "Please enter a subject"),
+  subject: z.string().trim().min(3, "Please enter a subject").max(300),
   message: z.string().trim().min(10, "Message must be at least 10 characters").max(5000),
+  // Honeypot — real users never see or fill this field. Optional/defaulted
+  // so older clients without it don't fail validation.
+  company: z.string().optional().default(""),
+  // Timestamp (ms) captured when the form loaded client-side. Used to reject
+  // submissions that arrive faster than a human could plausibly type a
+  // message — a common bot tell.
+  formLoadedAt: z.number().optional(),
 });
+
+const MIN_HUMAN_SUBMIT_MS = 1500;
 
 // Same convention as getAdminEmails() in lib/auth.ts — reads the
 // comma-separated ADMIN_EMAILS env var. Notifications go to the first
@@ -41,7 +50,31 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email, subject, message } = parsed.data;
+    const { name, email, subject, message, company, formLoadedAt } = parsed.data;
+
+    // Spam signals: honeypot filled, or submitted faster than a human could
+    // plausibly have read the form and typed a message. Respond with the
+    // same success shape a real submission gets — telling a bot it was
+    // caught just teaches it to adapt, whereas a fake success wastes its
+    // time for no gain.
+    const honeypotTripped = company.trim().length > 0;
+    const submittedTooFast =
+      typeof formLoadedAt === "number" &&
+      Date.now() - formLoadedAt < MIN_HUMAN_SUBMIT_MS;
+
+    if (honeypotTripped || submittedTooFast) {
+      console.warn("[CONTACT] Likely spam submission blocked", {
+        honeypotTripped,
+        submittedTooFast,
+      });
+      return NextResponse.json(
+        {
+          message: "Thanks — your message has been sent. We'll get back to you soon.",
+          id: null,
+        },
+        { status: 201 },
+      );
+    }
 
     await connectDB();
 

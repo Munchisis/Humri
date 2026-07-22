@@ -3,7 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { AlertCircle, CheckCircle, Loader2, Mail, Phone, Scale } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle,
+  Loader2,
+  Mail,
+  Phone,
+  Scale,
+} from "lucide-react";
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -11,10 +18,16 @@ export default function ContactPage() {
     email: "",
     subject: "",
     message: "",
+    // Honeypot — left blank by real visitors since it's hidden from view.
+    // Bots that auto-fill every field on a page tend to fill this too.
+    company: "",
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Captured once, at mount — lets the server flag submissions that arrive
+  // implausibly fast for a human to have read the form and typed a message.
+  const [formLoadedAt] = useState(() => Date.now());
 
   function update(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -29,7 +42,7 @@ export default function ContactPage() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, formLoadedAt }),
       });
 
       const data = await res.json();
@@ -78,8 +91,8 @@ export default function ContactPage() {
         </h1>
         <p className="text-gray-500 max-w-xl mb-12">
           Questions about submitting a matter, volunteering as a lawyer, or
-          anything else — send us a message and we&apos;ll respond as soon as
-          we can.
+          anything else — send us a message and we&apos;ll respond as soon as we
+          can.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-10">
@@ -148,12 +161,35 @@ export default function ContactPage() {
                     aria-live="assertive"
                     className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-5"
                   >
-                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
+                    <AlertCircle
+                      className="w-4 h-4 mt-0.5 shrink-0"
+                      aria-hidden="true"
+                    />
                     <span>{error}</span>
                   </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+                  {/* Honeypot field — hidden from sighted users and skipped by
+                      screen readers via aria-hidden. Kept off-screen rather
+                      than display:none, since some bots skip fields that are
+                      display:none but still fill absolutely-positioned ones. */}
+                  <div
+                    aria-hidden="true"
+                    className="absolute left-[-9999px] top-auto w-px h-px overflow-hidden"
+                  >
+                    <label htmlFor="company">Company</label>
+                    <input
+                      id="company"
+                      name="company"
+                      type="text"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={form.company}
+                      onChange={(e) => update("company", e.target.value)}
+                    />
+                  </div>
+
                   <div className="grid grid-cols-2 gap-3">
                     <div className="col-span-2 sm:col-span-1">
                       <label className="label" htmlFor="name">
@@ -218,7 +254,11 @@ export default function ContactPage() {
                   >
                     {loading ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> Sending…
+                        <Loader2
+                          className="w-4 h-4 animate-spin"
+                          aria-hidden="true"
+                        />{" "}
+                        Sending…
                       </>
                     ) : (
                       "Send message"

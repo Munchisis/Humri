@@ -7,6 +7,19 @@ const APP_URL =
   process.env.NEXTAUTH_URL ??
   "http://localhost:3000";
 
+// Escapes values that came from user input before they're interpolated into
+// an HTML email template. Without this, a message/name/subject containing
+// "<img src=x onerror=...>" or a spoofed link renders as live HTML in the
+// recipient's inbox rather than as inert text.
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // ─── Password reset email ─────────────────────────────────────────────────────
 
 export async function sendPasswordReset({
@@ -193,11 +206,16 @@ export async function sendContactFormNotification({
   subject: string;
   message: string;
 }) {
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safeSubject = escapeHtml(subject);
+  const safeMessage = escapeHtml(message);
+
   await resend.emails.send({
     from: FROM,
     to: adminEmail,
     replyTo: email,
-    subject: `[Contact form] ${subject}`,
+    subject: `[Contact form] ${safeSubject}`,
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
         <div style="background:#085041;padding:24px 32px;border-radius:12px 12px 0 0">
@@ -206,13 +224,13 @@ export async function sendContactFormNotification({
         </div>
         <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
           <table style="width:100%;border-collapse:collapse;margin:0 0 20px">
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:13px;width:80px">From</td><td style="padding:6px 0;font-weight:500">${name}</td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Email</td><td style="padding:6px 0">${email}</td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Subject</td><td style="padding:6px 0;font-weight:500">${subject}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:13px;width:80px">From</td><td style="padding:6px 0;font-weight:500">${safeName}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Email</td><td style="padding:6px 0">${safeEmail}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Subject</td><td style="padding:6px 0;font-weight:500">${safeSubject}</td></tr>
           </table>
-          <div style="background:#F9FAFB;border:1px solid #e5e7eb;border-radius:8px;padding:16px;color:#374151;line-height:1.6;white-space:pre-wrap">${message}</div>
+          <div style="background:#F9FAFB;border:1px solid #e5e7eb;border-radius:8px;padding:16px;color:#374151;line-height:1.6;white-space:pre-wrap">${safeMessage}</div>
           <p style="margin:20px 0 0;font-size:12px;color:#9ca3af">
-            Reply directly to this email to respond to ${name}.
+            Reply directly to this email to respond to ${safeName}.
           </p>
         </div>
       </div>
@@ -231,6 +249,9 @@ export async function sendContactFormConfirmation({
   email: string;
   subject: string;
 }) {
+  const safeName = escapeHtml(name);
+  const safeSubject = escapeHtml(subject);
+
   await resend.emails.send({
     from: FROM,
     to: email,
@@ -242,9 +263,9 @@ export async function sendContactFormConfirmation({
           <p style="color:#9FE1CB;font-size:12px;margin:4px 0 0">Access to justice</p>
         </div>
         <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
-          <p style="margin:0 0 16px">Dear <strong>${name}</strong>,</p>
+          <p style="margin:0 0 16px">Dear <strong>${safeName}</strong>,</p>
           <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
-            We've received your message regarding "<strong>${subject}</strong>" and will get back to
+            We've received your message regarding "<strong>${safeSubject}</strong>" and will get back to
             you as soon as we can.
           </p>
           <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0">
