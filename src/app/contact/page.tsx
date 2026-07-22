@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Script from "next/script";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -11,6 +12,25 @@ import {
   Phone,
   Scale,
 } from "lucide-react";
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        container: HTMLElement,
+        options: {
+          sitekey: string;
+          callback: (token: string) => void;
+          "expired-callback"?: () => void;
+          "error-callback"?: () => void;
+        },
+      ) => string;
+      reset: (widgetId?: string) => void;
+    };
+  }
+}
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -29,6 +49,37 @@ export default function ContactPage() {
   // implausibly fast for a human to have read the form and typed a message.
   const [formLoadedAt] = useState(() => Date.now());
 
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileContainerRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetIdRef = useRef<string | undefined>(undefined);
+
+  function renderTurnstile() {
+    if (
+      turnstileContainerRef.current &&
+      window.turnstile &&
+      TURNSTILE_SITE_KEY
+    ) {
+      turnstileWidgetIdRef.current = window.turnstile.render(
+        turnstileContainerRef.current,
+        {
+          sitekey: TURNSTILE_SITE_KEY,
+          callback: (token) => setTurnstileToken(token),
+          "expired-callback": () => setTurnstileToken(""),
+          "error-callback": () => setTurnstileToken(""),
+        },
+      );
+    }
+  }
+
+  useEffect(() => {
+    // Handles the case where the script (loaded elsewhere, e.g. cached from
+    // a prior page) is already available by the time this component mounts.
+    if (window.turnstile) {
+      renderTurnstile();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function update(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
@@ -36,13 +87,19 @@ export default function ContactPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (TURNSTILE_SITE_KEY && !turnstileToken) {
+      setError("Please complete the verification challenge.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, formLoadedAt }),
+        body: JSON.stringify({ ...form, formLoadedAt, turnstileToken }),
       });
 
       const data = await res.json();
@@ -57,6 +114,11 @@ export default function ContactPage() {
       setError("Something went wrong. Check your connection and try again.");
     } finally {
       setLoading(false);
+      // A Turnstile token is single-use — reset so a retry gets a fresh one.
+      setTurnstileToken("");
+      if (window.turnstile && turnstileWidgetIdRef.current) {
+        window.turnstile.reset(turnstileWidgetIdRef.current);
+      }
     }
   }
 
@@ -247,9 +309,15 @@ export default function ContactPage() {
                     </div>
                   </div>
 
+                  {TURNSTILE_SITE_KEY && (
+                    <div ref={turnstileContainerRef} className="pt-1" />
+                  )}
+
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={
+                      loading || (!!TURNSTILE_SITE_KEY && !turnstileToken)
+                    }
                     className="btn w-full justify-center py-2.5 mt-1 bg-emerald-800 hover:bg-emerald-900 text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {loading ? (
@@ -269,6 +337,14 @@ export default function ContactPage() {
             )}
           </div>
         </div>
+
+        {TURNSTILE_SITE_KEY && (
+          <Script
+            src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+            strategy="afterInteractive"
+            onLoad={renderTurnstile}
+          />
+        )}
       </div>
     </div>
   );

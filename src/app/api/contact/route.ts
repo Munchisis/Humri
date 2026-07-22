@@ -9,9 +9,17 @@ import {
 
 const ContactSchema = z.object({
   name: z.string().trim().min(2, "Please enter your name").max(200),
-  email: z.string().trim().toLowerCase().email("Please enter a valid email address"),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Please enter a valid email address"),
   subject: z.string().trim().min(3, "Please enter a subject").max(300),
-  message: z.string().trim().min(10, "Message must be at least 10 characters").max(5000),
+  message: z
+    .string()
+    .trim()
+    .min(10, "Message must be at least 10 characters")
+    .max(5000),
   // Honeypot — real users never see or fill this field. Optional/defaulted
   // so older clients without it don't fail validation.
   company: z.string().optional().default(""),
@@ -19,9 +27,45 @@ const ContactSchema = z.object({
   // submissions that arrive faster than a human could plausibly type a
   // message — a common bot tell.
   formLoadedAt: z.number().optional(),
+  // Cloudflare Turnstile response token. Only required when Turnstile is
+  // actually configured (TURNSTILE_SECRET_KEY set) — see verifyTurnstile().
+  turnstileToken: z.string().optional().default(""),
 });
 
 const MIN_HUMAN_SUBMIT_MS = 1500;
+
+async function verifyTurnstile(
+  token: string,
+  remoteIp: string | null,
+): Promise<boolean> {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  // Turnstile not configured on this deployment — nothing to verify against,
+  // so don't block submissions (this mirrors the client, which only renders
+  // the widget when NEXT_PUBLIC_TURNSTILE_SITE_KEY is set).
+  if (!secret) return true;
+  if (!token) return false;
+
+  try {
+    const body = new URLSearchParams({ secret, response: token });
+    if (remoteIp) body.set("remoteip", remoteIp);
+
+    const res = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+      },
+    );
+    const data = await res.json();
+    return data.success === true;
+  } catch (err) {
+    console.error("[CONTACT] Turnstile verification request failed:", err);
+    // Fail closed — if we can't reach Cloudflare to verify, don't let the
+    // submission through unverified.
+    return false;
+  }
+}
 
 // Same convention as getAdminEmails() in lib/auth.ts — reads the
 // comma-separated ADMIN_EMAILS env var. Notifications go to the first
@@ -50,7 +94,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email, subject, message, company, formLoadedAt } = parsed.data;
+    const {
+      name,
+      email,
+      subject,
+      message,
+      company,
+      formLoadedAt,
+      turnstileToken,
+    } = parsed.data;
 
     // Spam signals: honeypot filled, or submitted faster than a human could
     // plausibly have read the form and typed a message. Respond with the
@@ -69,10 +121,26 @@ export async function POST(req: NextRequest) {
       });
       return NextResponse.json(
         {
-          message: "Thanks — your message has been sent. We'll get back to you soon.",
+          message:
+            "Thanks — your message has been sent. We'll get back to you soon.",
           id: null,
         },
         { status: 201 },
+      );
+    }
+
+    // Unlike the honeypot/timing checks above, a Turnstile failure gets a
+    // real error back to the client — the widget is visible to legitimate
+    // users, so a failure here is either a bot (already effectively opaque
+    // to them) or a genuine hiccup (expired token, network issue) that a
+    // human should be able to see and retry.
+    const remoteIp =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+    const turnstileOk = await verifyTurnstile(turnstileToken, remoteIp);
+    if (!turnstileOk) {
+      return NextResponse.json(
+        { error: "Verification failed. Please try again." },
+        { status: 400 },
       );
     }
 
@@ -90,7 +158,13 @@ export async function POST(req: NextRequest) {
     const adminEmail = getContactNotificationEmail();
     if (adminEmail) {
       try {
-        await sendContactFormNotification({ adminEmail, name, email, subject, message });
+        await sendContactFormNotification({
+          adminEmail,
+          name,
+          email,
+          subject,
+          message,
+        });
       } catch (err) {
         console.error("[CONTACT] admin notification email failed:", err);
       }
@@ -108,7 +182,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
-        message: "Thanks — your message has been sent. We'll get back to you soon.",
+        message:
+          "Thanks — your message has been sent. We'll get back to you soon.",
         id: submission._id.toString(),
       },
       { status: 201 },
