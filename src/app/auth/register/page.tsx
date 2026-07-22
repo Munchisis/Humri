@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle, AlertCircle, Loader2, Scale } from "lucide-react";
+import {
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  Scale,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import Image from "next/image";
 
 const SPECIALISATIONS = [
@@ -72,23 +79,31 @@ export default function RegisterPage() {
   const isLongEnough = form.password.length >= 8;
   const hasUpper = /[A-Z]/.test(form.password);
   const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(form.password);
+  const passwordValid = isLongEnough && hasUpper && hasSpecial;
+
+  // Live match feedback — only show once the user has started typing the confirmation
+  const passwordsMatch =
+    form.confirmPassword.length > 0 && form.password === form.confirmPassword;
+  const passwordsMismatch =
+    form.confirmPassword.length > 0 && form.password !== form.confirmPassword;
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   // Consent states
   const [hasConsented, setHasConsented] = useState<boolean>(false);
   const [consentError, setConsentError] = useState<string>("");
 
-  const handleCheckboxChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ): void => {
+  function handleCheckboxChange(e: React.ChangeEvent<HTMLInputElement>): void {
     setHasConsented(e.target.checked);
     if (e.target.checked) {
       setConsentError("");
     }
-  };
+  }
 
   function update(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -99,7 +114,7 @@ export default function RegisterPage() {
     setError("");
 
     // Front-end structural security checks matching the API validation constraints
-    if (!isLongEnough || !hasUpper || !hasSpecial) {
+    if (!passwordValid) {
       setError("Password does not meet the specified security criteria.");
       return;
     }
@@ -122,11 +137,11 @@ export default function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: form.name,
-          email: form.email,
+          name: form.name.trim(),
+          email: form.email.trim().toLowerCase(),
           password: form.password,
           confirmPassword: form.confirmPassword,
-          barNumber: form.barNumber,
+          barNumber: form.barNumber.trim(),
           specialisation: form.specialisation,
           state: form.state,
         }),
@@ -207,7 +222,11 @@ export default function RegisterPage() {
           </p>
 
           {error && (
-            <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-5">
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-5"
+            >
               <AlertCircle
                 className="w-4 h-4 mt-0.5 shrink-0"
                 aria-hidden="true"
@@ -216,25 +235,28 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
-                <label className="label">
+                <label className="label" htmlFor="name">
                   Full name<span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="name"
                   className="input focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   placeholder="Chidi Okoro"
                   required
+                  autoComplete="name"
                   value={form.name}
                   onChange={(e) => update("name", e.target.value)}
                 />
               </div>
               <div className="col-span-2">
-                <label className="label">
+                <label className="label" htmlFor="email">
                   Email address<span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="email"
                   type="email"
                   autoComplete="email"
                   className="input focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
@@ -245,23 +267,44 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {/* Password Input Block */}
+              {/* Password */}
               <div className="col-span-2 sm:col-span-1">
-                <label className="label">
+                <label className="label" htmlFor="password">
                   Password<span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  autoComplete="new-password"
-                  className="input focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  placeholder="Min. 8 characters"
-                  required
-                  value={form.password}
-                  onChange={(e) => update("password", e.target.value)}
-                />
+                <div className="relative flex items-center">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    aria-describedby="password-requirements"
+                    aria-invalid={form.password.length > 0 && !passwordValid}
+                    className="input pr-10 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    placeholder="Min. 8 characters"
+                    required
+                    value={form.password}
+                    onChange={(e) => update("password", e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    className="absolute right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                      <Eye className="h-4 w-4" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
 
-                {/* Visual Feedback Requirement List */}
-                <ul className="text-[11px] mt-2 space-y-1 p-2 bg-gray-900/5 dark:bg-slate-900 rounded border border-gray-100 dark:border-slate-800">
+                <ul
+                  id="password-requirements"
+                  className="text-[11px] mt-2 space-y-1 p-2 bg-gray-900/5 dark:bg-slate-900 rounded border border-gray-100 dark:border-slate-800"
+                >
                   <li
                     className={
                       isLongEnough
@@ -292,20 +335,59 @@ export default function RegisterPage() {
                 </ul>
               </div>
 
-              {/* Confirm Password Input Block */}
+              {/* Confirm Password */}
               <div className="col-span-2 sm:col-span-1">
-                <label className="label">
+                <label className="label" htmlFor="confirmPassword">
                   Confirm password<span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  autoComplete="new-password"
-                  className="input focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  placeholder="Repeat password"
-                  required
-                  value={form.confirmPassword}
-                  onChange={(e) => update("confirmPassword", e.target.value)}
-                />
+                <div className="relative flex items-center">
+                  <input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    aria-invalid={passwordsMismatch}
+                    className={`input pr-10 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
+                      passwordsMismatch ? "border-red-300" : ""
+                    }`}
+                    placeholder="Repeat password"
+                    required
+                    value={form.confirmPassword}
+                    onChange={(e) => update("confirmPassword", e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    aria-label={
+                      showConfirmPassword ? "Hide password" : "Show password"
+                    }
+                    className="absolute right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                      <Eye className="h-4 w-4" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
+
+                {/* Live match feedback, mirrors the password requirements list */}
+                <div className="text-[11px] mt-2 p-2 rounded border border-gray-100 dark:border-slate-800 bg-gray-900/5 dark:bg-slate-900 min-h-[1.75rem] flex items-center">
+                  {passwordsMatch && (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                      ✓ Passwords match
+                    </span>
+                  )}
+                  {passwordsMismatch && (
+                    <span className="text-red-500 opacity-70">
+                      ✗ Passwords do not match
+                    </span>
+                  )}
+                  {!passwordsMatch && !passwordsMismatch && (
+                    <span className="text-gray-400">
+                      Re-enter your password to confirm
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -316,22 +398,26 @@ export default function RegisterPage() {
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="label">
+                  <label className="label" htmlFor="barNumber">
                     SCN Number<span className="text-red-500">*</span>
                   </label>
                   <input
+                    id="barNumber"
                     className="input focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     placeholder="e.g. SCN123456"
                     required
                     value={form.barNumber}
-                    onChange={(e) => update("barNumber", e.target.value)}
+                    onChange={(e) =>
+                      update("barNumber", e.target.value.toUpperCase())
+                    }
                   />
                 </div>
                 <div>
-                  <label className="label">
+                  <label className="label" htmlFor="state">
                     State<span className="text-red-500">*</span>
                   </label>
                   <select
+                    id="state"
                     className="input focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     required
                     value={form.state}
@@ -346,11 +432,12 @@ export default function RegisterPage() {
                   </select>
                 </div>
                 <div className="col-span-2">
-                  <label className="label">
+                  <label className="label" htmlFor="specialisation">
                     Area of specialisation
                     <span className="text-red-500">*</span>
                   </label>
                   <select
+                    id="specialisation"
                     className="input focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     required
                     value={form.specialisation}
@@ -400,7 +487,10 @@ export default function RegisterPage() {
                 </div>
 
                 {consentError && (
-                  <div className="flex items-start gap-2 text-rose-500 text-sm font-medium pt-1">
+                  <div
+                    role="alert"
+                    className="flex items-start gap-2 text-rose-500 text-sm font-medium pt-1"
+                  >
                     <AlertCircle
                       className="w-3.5 h-3.5 mt-0.5 shrink-0"
                       aria-hidden="true"
@@ -413,8 +503,12 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="btn w-full justify-center py-2.5 mt-1 bg-emerald-800 hover:bg-emerald-900 text-white transition-colors disabled:opacity-60"
+              disabled={
+                loading ||
+                (form.password.length > 0 && !passwordValid) ||
+                passwordsMismatch
+              }
+              className="btn w-full justify-center py-2.5 mt-1 bg-emerald-800 hover:bg-emerald-900 text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>

@@ -1,5 +1,6 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import User, { IUserDocument } from "@/models/User";
 
@@ -14,6 +15,15 @@ function getAdminEmails(): string[] {
 
 const SHORT_SESSION = 60 * 60 * 24; // 1 day  — default (not "remembered")
 const LONG_SESSION = 60 * 60 * 24 * 30; // 30 days — "remember me" checked
+
+// A precomputed bcrypt hash with no corresponding real password. Compared
+// against on the "user not found" path so that branch takes roughly the same
+// time as a real password check — otherwise response timing alone reveals
+// whether an email is registered, even with an identical error message.
+const DUMMY_HASH =
+  "$2a$12$CwTycUXWue0Thq9StjUM0uJ8O8G4/9Vp/6l4E9L2h3q3z8yJZ4h5S";
+
+const GENERIC_CREDENTIALS_ERROR = "Incorrect email or password.";
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -44,46 +54,79 @@ export const authOptions: NextAuthOptions = {
         const adminEmails = getAdminEmails();
         const isAdminEmail = adminEmails.includes(email);
 
-        await connectDB();
+        // Known, intentional auth failures (bad password, pending approval,
+        // etc.) throw plain Error with a message that's safe to show as-is —
+        // those pass straight through the outer catch below unchanged.
+        // Anything else (DB connection drops, DNS failures, unexpected
+        // exceptions) gets caught and replaced with a generic message so
+        // infrastructure details never reach the client.
+        try {
+          await connectDB();
 
-        // Fetch user with password (select: false in schema)
-        let user = await User.findOne({ email }).select("+password");
+          // Fetch user with password (select: false in schema)
+          let user = await User.findOne({ email }).select("+password");
 
-        if (!user) {
-          throw new Error("No account found with that email address.");
-        }
+          if (!user) {
+            // Run a dummy compare so this branch takes comparable time to the
+            // real-user path below — prevents timing-based email enumeration.
+            await bcrypt.compare(credentials.password, DUMMY_HASH);
+            throw new Error(GENERIC_CREDENTIALS_ERROR);
+          }
 
-        const isValid = await user.comparePassword(credentials.password);
-        if (!isValid) {
-          throw new Error("Incorrect User or password. Please try again.");
-        }
+          const isValid = await user.comparePassword(credentials.password);
+          if (!isValid) {
+            throw new Error(GENERIC_CREDENTIALS_ERROR);
+          }
 
-        // If email is in ADMIN_EMAILS whitelist, auto-promote to admin
-        if (isAdminEmail && user.role !== "admin") {
-          user = (await User.findOneAndUpdate<IUserDocument>(
-            { email },
-            { role: "admin", isApproved: true },
-            { new: true },
-          ).select("+password")) as any;
-        }
+          // If email is in ADMIN_EMAILS whitelist, auto-promote to admin
+          if (isAdminEmail && user.role !== "admin") {
+            user = (await User.findOneAndUpdate<IUserDocument>(
+              { email },
+              { role: "admin", isApproved: true },
+              { new: true },
+            ).select("+password")) as any;
+          }
 
-        // Lawyers not yet approved cannot log in
-        if (user!.role === "lawyer" && !user!.isApproved) {
+          // Lawyers not yet approved cannot log in
+          if (user!.role === "lawyer" && !user!.isApproved) {
+            throw new Error(
+              "Your account is pending approval. You will receive an email once an admin approves your registration.",
+            );
+          }
+
+          return {
+            id: user!._id.toString(),
+            name: user!.name,
+            email: user!.email,
+            role: user!.role,
+            isApproved: user!.isApproved,
+            emailVerified: user!.emailVerified,
+            // pass through as a string so it survives the credentials round-trip
+            rememberMe: credentials.rememberMe === "true",
+          } as never;
+        } catch (err) {
+          // Our own intentional errors carry a message we've already vetted
+          // as safe to show — let those through unchanged.
+          const knownMessages = [
+            GENERIC_CREDENTIALS_ERROR,
+            "Please enter your email and password.",
+          ];
+          if (
+            err instanceof Error &&
+            (knownMessages.includes(err.message) ||
+              err.message.startsWith("Your account is pending approval"))
+          ) {
+            throw err;
+          }
+
+          // Anything else — DB connection errors, DNS failures, driver
+          // exceptions — gets logged server-side and replaced with a generic
+          // message before it can reach the client.
+          console.error("[AUTH] Unexpected error during authorize():", err);
           throw new Error(
-            "Your account is pending approval. You will receive an email once an admin approves your registration.",
+            "Something went wrong signing you in. Please try again in a moment.",
           );
         }
-
-        return {
-          id: user!._id.toString(),
-          name: user!.name,
-          email: user!.email,
-          role: user!.role,
-          isApproved: user!.isApproved,
-          emailVerified: user!.emailVerified,
-          // pass through as a string so it survives the credentials round-trip
-          rememberMe: credentials.rememberMe === "true",
-        } as never;
       },
     }),
   ],

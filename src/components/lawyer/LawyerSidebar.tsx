@@ -59,7 +59,7 @@ export function LawyerSidebar({ user }: Props) {
           >
             HUMRI
           </Link>
-          <div className="text-xs text-brand-400 mt-0.5">Admin</div>
+          <div className="text-xs text-brand-400 mt-0.5">Lawyer</div>
         </div>
       </div>
 
