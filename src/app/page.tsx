@@ -231,6 +231,18 @@ export default function HomePage() {
           </div>
           <div className="flex gap-4">
             <Link
+              href="/about"
+              className="hover:text-gray-600 dark:hover:text-gray-200"
+            >
+              About us
+            </Link>
+            <Link
+              href="/contact"
+              className="hover:text-gray-600 dark:hover:text-gray-200"
+            >
+              Contact us
+            </Link>
+            <Link
               href="/submit"
               className="hover:text-gray-600 dark:hover:text-gray-200"
             >
