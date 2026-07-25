@@ -4,11 +4,12 @@ const isDev = process.env.NODE_ENV !== "production";
 
 const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ""} blob: https://www.googletagmanager.com https://www.google-analytics.com;
+    script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ""} blob: https://www.googletagmanager.com https://www.google-analytics.com https://challenges.cloudflare.com https://static.cloudflareinsights.com;
     style-src 'self' 'unsafe-inline';
     img-src 'self' blob: data: https:;
     font-src 'self';
-    connect-src 'self' https://www.google-analytics.com https://*.sentry.io https://*.ingest.sentry.io;
+    connect-src 'self' https://www.google-analytics.com https://*.sentry.io https://*.ingest.sentry.io https://challenges.cloudflare.com https://static.cloudflareinsights.com;
+    frame-src https://challenges.cloudflare.com;
     frame-ancestors 'none';
     base-uri 'self';
     form-action 'self';
