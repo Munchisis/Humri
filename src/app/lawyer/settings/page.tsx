@@ -248,7 +248,7 @@ export default function LawyerSettingsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="label">NBA bar number</label>
+                <label className="label">Supreme Court Number</label>
                 <input
                   className="input"
                   value={profile.barNumber}

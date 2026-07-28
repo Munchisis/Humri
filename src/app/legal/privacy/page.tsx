@@ -47,7 +47,7 @@ export default function PrivacyPolicyPage() {
         <LegalList
           items={[
             "Full name, email address, and password (hashed — never stored in plain text)",
-            "Nigerian Bar Association (NBA) bar number",
+            "Nigerian Supreme Court Enrollment Number",
             "Area of legal specialisation and state of practice",
             "Matter activity statistics (active, completed, pro bono hours)",
           ]}

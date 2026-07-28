@@ -87,7 +87,7 @@ export default function TermsOfUsePage() {
         <LegalP>Volunteer lawyers registered on HUMRI agree to:</LegalP>
         <LegalList
           items={[
-            "Provide accurate information during registration, including a valid NBA bar number",
+            "Provide accurate information during registration, including a valid Supreme Court Enrollment number",
             "Handle accepted matters with the same standard of care as paid instructions",
             "Comply with the Rules of Professional Conduct for Legal Practitioners in Nigeria",
             "Maintain client confidentiality in accordance with their professional obligations",

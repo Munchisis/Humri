@@ -194,7 +194,7 @@ export default function AdminLawyersPage() {
                     </span>
                     <span className="flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-gray-300 inline-block" />
-                      NBA: {l.barNumber || "—"}
+                      SCN: {l.barNumber || "—"}
                     </span>
                     {l.emailVerified ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
