@@ -10,7 +10,7 @@ const cspHeader = `
     base-uri 'self';
     form-action 'self';
     frame-src 'self' https://vercel.live https://challenges.cloudflare.com;
-    connect-src 'self' https://vercel.live https://*.vercel.live wss://*.vercel.live https://www.google-analytics.com https://*.google-analytics.com https://cloudflareinsights.com https://*.cloudflareinsights.com;
+    connect-src 'self' https://vercel.live https://*.vercel.live wss://*.vercel.live https://www.google-analytics.com https://*.google-analytics.com https://cloudflareinsights.com https://*.cloudflareinsights.com https://challenges.cloudflare.com;
     frame-ancestors 'none';
     upgrade-insecure-requests;
 `;
