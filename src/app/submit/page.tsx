@@ -6,16 +6,20 @@ import { CheckCircle, AlertCircle, Loader2, Copy, Check } from "lucide-react";
 import Image from "next/image";
 
 const MATTER_TYPES = [
-  { value: "employment",    label: "Employment dispute"  },
-  { value: "tenancy",       label: "Tenancy / landlord"  },
-  { value: "family_law",    label: "Family law"          },
-  { value: "criminal",      label: "Criminal defence"    },
-  { value: "land_property", label: "Land / property"     },
-  { value: "contract",      label: "Contract dispute"    },
-  { value: "human_rights",  label: "Human rights"        },
-  { value: "debt",          label: "Debt recovery"       },
-  { value: "immigration",   label: "Immigration"         },
-  { value: "other",         label: "Other"               },
+  { value: "employment", label: "Employment dispute" },
+  { value: "tenancy", label: "Tenancy / landlord" },
+  { value: "family_law", label: "Family law" },
+  { value: "criminal", label: "Criminal defence" },
+  { value: "land_property", label: "Land / property" },
+  { value: "contract", label: "Contract dispute" },
+  { value: "human_rights", label: "Human rights" },
+  { value: "debt", label: "Debt recovery" },
+  { value: "immigration", label: "Immigration" },
+  { value: "Illegal_detention", label: "Illegal detention" },
+  { value: "Imminent_eviction", label: "Imminent eviction" },
+  { value: "Domestic_violence", label: "Domestic violence" },
+  { value: "Child_protection", label: "Child protection" },
+  { value: "other", label: "Other" },
 ];
 
 const NIGERIAN_STATES = [

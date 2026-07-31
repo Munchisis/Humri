@@ -182,6 +182,10 @@ export default function HomePage() {
               "Human rights violations",
               "Debt recovery",
               "Immigration matters",
+              "Illegal detention",
+              "Imminent eviction",
+              "Domestic violence",
+              "Child protection",
             ].map((t) => (
               <span
                 key={t}
