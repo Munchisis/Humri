@@ -1,16 +1,15 @@
 import { withSentryConfig } from "@sentry/nextjs";
 
-
 const isDev = process.env.NODE_ENV !== "production";
 
 const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ""} blob: https://www.googletagmanager.com https://www.google-analytics.com https://challenges.cloudflare.com https://static.cloudflareinsights.com;
+    script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ""} blob: https://www.googletagmanager.com https://www.google-analytics.com https://challenges.cloudflare.com https://static.cloudflareinsights.com https://vercel.live;
     style-src 'self' 'unsafe-inline';
     img-src 'self' blob: data: https:;
     font-src 'self';
-    connect-src 'self' https://www.google-analytics.com https://*.sentry.io https://*.ingest.sentry.io https://challenges.cloudflare.com https://static.cloudflareinsights.com;
-    frame-src https://challenges.cloudflare.com;
+    connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.sentry.io https://*.ingest.sentry.io https://challenges.cloudflare.com https://static.cloudflareinsights.com https://cloudflareinsights.com https://*.cloudflareinsights.com https://vercel.live https://*.vercel.live wss://*.vercel.live;
+    frame-src 'self' https://challenges.cloudflare.com https://vercel.live;
     frame-ancestors 'none';
     base-uri 'self';
     form-action 'self';
