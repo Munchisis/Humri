@@ -71,7 +71,7 @@ export function LegalLayout({ title, lastUpdated, children }: LegalLayoutProps) 
         <div className="max-w-4xl mx-auto px-4 py-8 flex items-center justify-between text-xs text-gray-400">
           <div className="flex items-center gap-2">
             <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
-            <span>HUMRI — HUMAN RIGHTS. HUMAN DIGNITY.JUSTICE FOR ALL.</span>
+            <span>HUMRI — ACCESS TO JUSTICE.</span>
           </div>
           <div className="flex gap-4">
             <Link
