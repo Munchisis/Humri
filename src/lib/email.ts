@@ -22,7 +22,7 @@ export async function sendMatterSubmitted({
   await resend.emails.send({
     from: FROM,
     to: clientEmail,
-    subject: `Your matter has been received — ${referenceNumber}`,
+    subject: `Your matter has been received ${referenceNumber}`,
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
         <div style="background:#085041;padding:24px 32px;border-radius:12px 12px 0 0">
@@ -38,7 +38,7 @@ export async function sendMatterSubmitted({
           <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:20px;margin:24px 0;text-align:center">
             <p style="margin:0 0 4px;font-size:12px;color:#15803D;text-transform:uppercase;letter-spacing:.05em">Your reference number</p>
             <p style="margin:0;font-size:28px;font-weight:700;font-family:monospace;color:#085041;letter-spacing:.1em">${referenceNumber}</p>
-            <p style="margin:8px 0 0;font-size:12px;color:#6b7280">Save this — you will need it to track your matter</p>
+            <p style="margin:8px 0 0;font-size:12px;color:#6b7280">Save this, you will need it to track your matter</p>
           </div>
           <p style="margin:0 0 8px;color:#4b5563;line-height:1.6"><strong>Matter type:</strong> ${matterType}</p>
           <p style="margin:0 0 24px;color:#4b5563;line-height:1.6">
@@ -76,7 +76,7 @@ export async function sendLawyerAssigned({
   await resend.emails.send({
     from: FROM,
     to: clientEmail,
-    subject: `A lawyer has been assigned to your matter — ${referenceNumber}`,
+    subject: `A lawyer has been assigned to your matter ${referenceNumber}`,
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
         <div style="background:#085041;padding:24px 32px;border-radius:12px 12px 0 0">
@@ -86,7 +86,7 @@ export async function sendLawyerAssigned({
         <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
           <p style="margin:0 0 16px">Dear <strong>${clientName}</strong>,</p>
           <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
-            Good news — a volunteer lawyer has been assigned to your matter
+            Good news a volunteer lawyer has been assigned to your matter
             <strong>${referenceNumber}</strong> and will be in touch with you shortly.
           </p>
           <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:20px;margin:24px 0">
@@ -127,7 +127,7 @@ export async function sendMatterCompleted({
   await resend.emails.send({
     from: FROM,
     to: clientEmail,
-    subject: `Your matter has been resolved — ${referenceNumber}`,
+    subject: `Your matter has been resolved ${referenceNumber}`,
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
         <div style="background:#085041;padding:24px 32px;border-radius:12px 12px 0 0">
@@ -142,7 +142,7 @@ export async function sendMatterCompleted({
           </p>
           <p style="margin:0 0 24px;color:#4b5563;line-height:1.6">
             We hope HumRi was able to help you. If you have a new legal matter in the future,
-            do not hesitate to submit again — our volunteer lawyers are always here to help.
+            do not hesitate to submit again, our volunteer lawyers are always here to help.
           </p>
           <a href="${APP_URL}/submit"
             style="display:inline-block;background:#085041;color:#E1F5EE;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500;font-size:14px">

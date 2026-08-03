@@ -153,7 +153,7 @@ export default function ContactPage() {
         </h1>
         <p className="text-gray-500 max-w-xl mb-12">
           Questions about submitting a matter, volunteering as a lawyer, or
-          anything else — send us a message and we&apos;ll respond as soon as we
+          anything else, send us a message and we&apos;ll respond as soon as we
           can.
         </p>
 
@@ -212,7 +212,7 @@ export default function ContactPage() {
                 </div>
                 <h2 className="text-xl font-medium mb-2">Message sent</h2>
                 <p className="text-sm text-gray-500">
-                  Thanks for reaching out — we&apos;ll get back to you soon.
+                  Thanks for reaching out, we&apos;ll get back to you soon.
                 </p>
               </div>
             ) : (

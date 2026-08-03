@@ -252,7 +252,7 @@ export default function AdminMessagesPage() {
             ) : (
               <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
                 <CheckCircle className="w-4 h-4" />
-                Resolved — reply sent to lawyer
+                Resolved, reply sent to lawyer
                 <button onClick={() => deleteMessage(selected._id)}
                   disabled={deleting === selected._id}
                   className="btn text-xs gap-1.5 text-red-600 border-red-200 hover:bg-red-50 ml-auto dark:text-red-400 dark:border-red-800">

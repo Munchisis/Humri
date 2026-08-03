@@ -231,7 +231,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
           <div className="flex flex-col  gap-2">
             <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
-            <span>HUMRI — ACCESS TO JUSTICE.</span>
+            <span><strong>HUMRI</strong> ACCESS TO JUSTICE.</span>
           </div>
           <div className="flex flex-wrap justify-center gap-4">
             <Link

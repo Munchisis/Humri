@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Scale, Users, FileText, ShieldCheck } from "lucide-react";
 
 export const metadata = {
-  title: "About — HUMRI",
+  title: "About HUMRI",
   description: "HUMRI connects people who need legal help with volunteer lawyers.",
 };
 
@@ -38,25 +38,31 @@ export default function AboutPage() {
           Legal help shouldn&apos;t depend on what you can afford.
         </h1>
         <p className="text-gray-500 max-w-2xl text-lg leading-relaxed mb-16">
-          HUMRI connects people who need legal help with volunteer lawyers
-          willing to give their time — so that access to justice depends on
-          the merits of a case, not the size of a bank account.
+          <strong>HUMRI</strong> connects people who need legal help with
+          volunteer lawyers willing to give their time so that access to justice
+          depends on the merits of a case, not the size of a bank account.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-16">
           <div className="card border border-emerald-900/5">
             <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center mb-4">
-              <FileText className="w-5 h-5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+              <FileText
+                className="w-5 h-5 text-emerald-700 dark:text-emerald-400"
+                aria-hidden="true"
+              />
             </div>
             <h3 className="font-medium mb-1.5">Submit a matter</h3>
             <p className="text-sm text-gray-500 leading-relaxed">
-              Anyone who needs legal help can describe their situation in a
-              few minutes — no legal jargon required.
+              Anyone who needs legal help can describe their situation in a few
+              minutes no legal jargon required.
             </p>
           </div>
           <div className="card border border-emerald-900/5">
             <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center mb-4">
-              <Users className="w-5 h-5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+              <Users
+                className="w-5 h-5 text-emerald-700 dark:text-emerald-400"
+                aria-hidden="true"
+              />
             </div>
             <h3 className="font-medium mb-1.5">Matched with a lawyer</h3>
             <p className="text-sm text-gray-500 leading-relaxed">
@@ -66,12 +72,15 @@ export default function AboutPage() {
           </div>
           <div className="card border border-emerald-900/5">
             <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center mb-4">
-              <ShieldCheck className="w-5 h-5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+              <ShieldCheck
+                className="w-5 h-5 text-emerald-700 dark:text-emerald-400"
+                aria-hidden="true"
+              />
             </div>
             <h3 className="font-medium mb-1.5">Vetted volunteers</h3>
             <p className="text-sm text-gray-500 leading-relaxed">
-              Every volunteer lawyer's registration is reviewed before they
-              can take on a matter through the platform.
+              Every volunteer lawyer's registration is reviewed before they can
+              take on a matter through the platform.
             </p>
           </div>
         </div>
@@ -107,7 +116,10 @@ export default function AboutPage() {
 
         <p className="text-center text-sm text-gray-500 mt-16">
           Have questions?{" "}
-          <Link href="/contact" className="text-emerald-700 hover:underline font-medium">
+          <Link
+            href="/contact"
+            className="text-emerald-700 hover:underline font-medium"
+          >
             Contact us →
           </Link>
         </p>

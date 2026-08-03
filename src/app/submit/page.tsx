@@ -133,7 +133,7 @@ export default function SubmitPage() {
           </p>
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 dark:bg-gray-800 dark:border-gray-700">
             <p className="text-xs text-gray-500 mb-2">
-              Your reference number — save this
+              Your reference number, save this
             </p>
             <div className="flex items-center justify-center gap-3">
               <span className="text-xl font-mono font-semibold text-brand-700 dark:-gray-300">
@@ -410,7 +410,7 @@ export default function SubmitPage() {
                 <Loader2 className="w-4 h-4 animate-spin" /> Submitting...
               </>
             ) : (
-              "Submit matter — it's free"
+              "Submit matter, it's free"
             )}
           </button>
         </form>

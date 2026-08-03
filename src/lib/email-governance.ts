@@ -151,7 +151,7 @@ export async function sendClientMatterReassigning({
       </p>
       <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
         Your matter remains active and will be assigned to a new lawyer shortly.
-        You do not need to resubmit — everything you provided is still on file.
+        You do not need to resubmit, everything you provided is still on file.
       </p>
       <a href="${APP_URL}/track?ref=${referenceNumber}"
         style="display:inline-block;background:#085041;color:#E1F5EE;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500;font-size:14px">

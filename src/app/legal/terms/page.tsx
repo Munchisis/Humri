@@ -56,7 +56,7 @@ export default function TermsOfUsePage() {
           discretion of volunteer lawyers and the HUMRI administration.
         </LegalHighlight>
         <LegalP>
-          The legal assistance provided through HUMRI is entirely pro bono — no
+          The legal assistance provided through HUMRI is entirely pro bono, no
           fees are charged to clients at any stage. Any lawyer who solicits
           payment from a client through this platform should be reported to us
           immediately at support@humri.ng.

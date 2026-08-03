@@ -54,7 +54,7 @@ export async function sendPasswordReset({
             Reset your password →
           </a>
           <p style="margin:24px 0 0;color:#9ca3af;font-size:12px;line-height:1.6">
-            If you didn't request this, you can safely ignore this email — your password will not be changed.
+            If you didn't request this, you can safely ignore this email, your password will not be changed.
           </p>
           <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0">
           <p style="margin:0;font-size:12px;color:#9ca3af">
@@ -100,7 +100,7 @@ export async function sendEmailVerification({
             Verify email address →
           </a>
           <p style="margin:24px 0 0;color:#4b5563;line-height:1.6">
-            Your application is still being reviewed by our admin team regardless of email verification —
+            Your application is still being reviewed by our admin team regardless of email verification,
             this step simply confirms we can reach you.
           </p>
           <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0">
@@ -169,7 +169,7 @@ export async function sendLawyerSupportConfirmation({
   await resend.emails.send({
     from: FROM,
     to: lawyerEmail,
-    subject: "We received your message — HUMRI Support",
+    subject: "We received your message, HUMRI Support",
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
         <div style="background:#085041;padding:24px 32px;border-radius:12px 12px 0 0">

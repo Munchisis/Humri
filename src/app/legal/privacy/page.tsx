@@ -46,7 +46,7 @@ export default function PrivacyPolicyPage() {
         </LegalP>
         <LegalList
           items={[
-            "Full name, email address, and password (hashed — never stored in plain text)",
+            "Full name, email address, and password (hashed, never stored in plain text)",
             "Nigerian Supreme Court Enrollment Number",
             "Area of legal specialisation and state of practice",
             "Matter activity statistics (active, completed, pro bono hours)",
@@ -122,9 +122,9 @@ export default function PrivacyPolicyPage() {
         </LegalP>
         <LegalList
           items={[
-            "With the volunteer lawyer assigned to your matter — limited to the information necessary to handle your case",
+            "With the volunteer lawyer assigned to your matter, limited to the information necessary to handle your case",
             "With HUMRI administrators for platform management and quality assurance",
-            "With our service providers (MongoDB Atlas for database hosting, Vercel for platform hosting, Resend for email delivery) — under strict data processing agreements",
+            "With our service providers (MongoDB Atlas for database hosting, Vercel for platform hosting, Resend for email delivery) under strict data processing agreements",
             "With law enforcement or regulatory authorities when required by Nigerian law or court order",
             "With your explicit consent for any other purpose not listed here",
           ]}
@@ -137,7 +137,7 @@ export default function PrivacyPolicyPage() {
             "Client matter data is retained for 7 years from the date of submission, consistent with standard legal record-keeping practice in Nigeria",
             "Lawyer account data is retained for the duration of the account and 2 years thereafter",
             "Server logs are retained for 90 days",
-            "You may request deletion of your data — see Section 9 for your rights",
+            "You may request deletion of your data, see Section 9 for your rights",
           ]}
         />
       </LegalSection>

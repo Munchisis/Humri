@@ -10,7 +10,7 @@ export default function CookiePolicyPage() {
     <LegalLayout title="Cookie Policy" lastUpdated="29 June 2026">
 
       <LegalHighlight>
-        HUMRI uses a minimal number of cookies — only those strictly necessary to operate the
+        HUMRI uses a minimal number of cookies, only those strictly necessary to operate the
         platform securely. We do not use advertising cookies, tracking pixels, or third-party
         analytics that monitor your behaviour across other websites.
       </LegalHighlight>
@@ -137,9 +137,9 @@ export default function CookiePolicyPage() {
           process data as described in their own privacy policies:
         </LegalP>
         <LegalList items={[
-          "Vercel (hosting) — may set performance cookies for edge network routing",
-          "MongoDB Atlas (database) — server-side only, no client-side cookies",
-          "Resend (email delivery) — server-side only, no client-side cookies",
+          "Vercel (hosting) may set performance cookies for edge network routing",
+          "MongoDB Atlas (database) server-side only, no client-side cookies",
+          "Resend (email delivery) server-side only, no client-side cookies",
         ]} />
         <LegalP>
           Vercel's privacy policy is available at vercel.com/legal/privacy-policy.
