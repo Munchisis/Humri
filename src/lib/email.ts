@@ -175,7 +175,7 @@ export async function sendAdminNewMatter({
   await resend.emails.send({
     from: FROM,
     to: adminEmail,
-    subject: `New matter submitted — ${referenceNumber} ${urgency === "critical" ? "⚡ CRITICAL" : urgency === "urgent" ? "🕐 Urgent" : ""}`,
+    subject: `New matter submitted ${referenceNumber} ${urgency === "critical" ? "⚡ CRITICAL" : urgency === "urgent" ? "🕐 Urgent" : ""}`,
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
         <div style="background:#085041;padding:24px 32px;border-radius:12px 12px 0 0">

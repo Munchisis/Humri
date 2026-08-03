@@ -169,9 +169,10 @@ export default function ContactPage() {
                 href="mailto:hello@humri.org"
                 className="text-emerald-700 hover:underline font-medium"
               >
-                hello@humri.org
+                Contact@humri.org
               </a>
             </div>
+            HUMRI
             <div>
               <p className="flex items-center gap-1.5 text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
                 <Phone className="w-3.5 h-3.5" aria-hidden="true" />
@@ -179,7 +180,7 @@ export default function ContactPage() {
               </p>
               {/* Placeholder — replace with your real contact number */}
               <p className="text-gray-700 dark:text-gray-300">
-                +234 000 000 0000
+                +234 901 691 2002
               </p>
             </div>
             <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
