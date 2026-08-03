@@ -26,6 +26,18 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: cspHeader.replace(/\s{2,}/g, " ").trim(),
           },
+          {
+            key: "X-Frame-Options",
+            value: "DENY",
+          },
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "Access-Control-Allow-Origin",
+            value: "https://humri.org",
+          },
         ],
       },
     ];
