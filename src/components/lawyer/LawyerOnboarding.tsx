@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import {
   ArrowRight,
-  BookOpen,
-  CheckCircle2,
   ChevronLeft,
+  CheckCircle2,
   Compass,
   LifeBuoy,
 } from "lucide-react";
+import Image from "next/image";
+import logo from "../../../public/humri.png";
 
 interface LawyerOnboardingProps {
   children: ReactNode;
@@ -19,29 +20,32 @@ interface LawyerOnboardingProps {
 
 const slides = [
   {
-    title: "Welcome to your lawyer portal",
+    exhibit: "A",
+    title: "Welcome to your portal",
     description:
-      "You’re approved and ready to start helping clients. This short guide will walk you through the first steps.",
+      "You're approved and ready to start taking up matters. This short guide walks you through the steps.",
     bullets: [
       "Review the open matters in the pool.",
       "Choose a matter that fits your expertise.",
       "Keep your workload manageable and stay organized.",
     ],
-    icon: BookOpen,
+    icon: logo,
   },
   {
+    exhibit: "B",
     title: "Choose the right matter",
     description:
       "Open the matter pool and look for matters that match your experience, location, and availability.",
     bullets: [
       "Filter by matter type or urgency.",
-      "Pick a matter that you can realistically handle.",
+      "Pick a matter you can realistically handle.",
       "Only take on matters you can progress well.",
     ],
     icon: Compass,
   },
   {
-    title: "Claim it and follow through",
+    exhibit: "C",
+    title: "Claim it and finish it",
     description:
       "Once you claim a matter, it moves into your dashboard so you can monitor progress and updates.",
     bullets: [
@@ -52,7 +56,8 @@ const slides = [
     icon: CheckCircle2,
   },
   {
-    title: "Need help? Contact admin",
+    exhibit: "D",
+    title: "Need help? Reach out",
     description:
       "Use the support page whenever you need guidance, and keep your profile updated in settings.",
     bullets: [
@@ -72,22 +77,19 @@ export function LawyerOnboarding({
   const storageKey = userId
     ? `lawyer-onboarding:${userId}`
     : "lawyer-onboarding:guest";
-  const [step, setStep] = useState(0);
-  const [ready, setReady] = useState(() => {
-    if (typeof window === "undefined") {
-      return true;
-    }
 
-    return window.localStorage.getItem(storageKey) === "true";
-  });
+  // Default to `true` on both server and first client render so hydration
+  // never mismatches. The real value (read from localStorage) is applied
+  // a moment later, in the effect below.
+  const [ready, setReady] = useState(true);
+  const [checked, setChecked] = useState(false);
+  const [step, setStep] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const seen = window.localStorage.getItem(storageKey);
-    if (seen === "true") {
-      setReady(true);
-    } else {
-      setReady(false);
-    }
+    const seen = window.localStorage.getItem(storageKey) === "true";
+    setReady(seen);
+    setChecked(true);
   }, [storageKey]);
 
   const finish = () => {
@@ -95,111 +97,161 @@ export function LawyerOnboarding({
     setReady(true);
   };
 
+  const goTo = (index: number) => {
+    setStep(Math.max(0, Math.min(slides.length - 1, index)));
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "ArrowRight") goTo(step + 1);
+    if (event.key === "ArrowLeft") goTo(step - 1);
+  };
+
+  // Until we've checked localStorage, render a quiet placeholder instead of
+  // guessing — avoids both a hydration mismatch and a flash of real content.
+  if (!checked) {
+    return (
+      <div className="max-w-5xl w-full">
+        <div className="h-[420px] w-full animate-pulse rounded-2xl border border-[#E4DAC4] bg-[#F6F1E7] dark:border-[#2A3A57] dark:bg-[#17243B]" />
+      </div>
+    );
+  }
+
   if (ready) {
     return <>{children}</>;
   }
 
   const currentSlide = slides[step];
   const Icon = currentSlide.icon;
+  const firstName = userName?.trim().split(" ")[0] || "counsel";
+  const isLastStep = step === slides.length - 1;
 
   return (
     <div className="max-w-5xl w-full">
-      <div className="relative overflow-hidden rounded-[28px] border border-brand-200/70 bg-gradient-to-br from-brand-50 via-white to-slate-100 p-4 shadow-[0_20px_80px_-30px_rgba(15,23,42,0.35)] dark:border-brand-800/60 dark:from-brand-950/60 dark:via-slate-950 dark:to-brand-900/80">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.16),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.16),_transparent_30%)]" />
-        <div className="relative">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-            <div>
-              <p className="inline-flex items-center rounded-full border border-brand-200 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-brand-700 dark:border-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
-                First-time guide
-              </p>
-              <h2 className="mt-3 text-2xl font-semibold text-brand-950 dark:text-brand-100">
-                Welcome, {userName?.split(" ")[0] ?? "lawyer"}
-              </h2>
-            </div>
-            <div className="rounded-full border border-brand-200/80 bg-white/70 px-3 py-1.5 text-sm font-medium text-brand-700 shadow-sm dark:border-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
-              Step {step + 1} of {slides.length}
-            </div>
+      <div
+        ref={containerRef}
+        onKeyDown={handleKeyDown}
+        tabIndex={-1}
+        className="relative overflow-hidden rounded-2xl border border-[#E4DAC4] bg-white/30 shadow-[0_24px_70px_-32px_rgba(15,23,42,0.45)] dark:border-[#2A3A57] dark:bg-[#17243B]"
+      >
+        {/* letterhead rule */}
+        <div className="h-1.5 w-full bg-gradient-to-r from-[#187807] via-[#51863e] to-[#526b06]" />
+
+        <div className="flex flex-col sm:flex-row">
+          {/* Exhibit tab rail */}
+          <div className="flex shrink-0 gap-2 overflow-x-auto border-b border-[#E4DAC4] px-4 py-3 sm:flex-col sm:gap-1.5 sm:overflow-visible sm:border-b-0 sm:border-r sm:px-0 sm:py-6 dark:border-[#2A3A57]">
+            {slides.map((slide, index) => {
+              const isActive = index === step;
+              return (
+                <button
+                  key={slide.exhibit}
+                  onClick={() => goTo(index)}
+                  aria-current={isActive ? "step" : undefined}
+                  aria-label={`Exhibit ${slide.exhibit}: ${slide.title}`}
+                  className={`group flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-semibold tracking-wide transition-all sm:w-[92%] sm:rounded-r-full sm:rounded-l-none sm:pl-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#AD8A4E] ${
+                    isActive
+                      ? "bg-brand-800 text-[#F6F1E7] sm:translate-x-1 sm:shadow-md dark:bg-brand-600 dark:text-gray-200"
+                      : "text-[#010a00] hover:bg-brand-100 dark:text-[#B7C2D6] dark:hover:bg-[#1F3050]"
+                  }`}
+                >
+                  <span
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] ${
+                      isActive
+                        ? "border-[#F6F1E7]/50 dark:border-[#14213D]/40"
+                        : "border-current opacity-60"
+                    }`}
+                  >
+                    {slide.exhibit}
+                  </span>
+                  <span className="hidden sm:inline">{slide.title}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <div className="mb-6 h-2 w-full overflow-hidden rounded-full bg-white/70 dark:bg-brand-900/40">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-brand-600 via-cyan-500 to-emerald-500 transition-all duration-300"
-              style={{ width: `${((step + 1) / slides.length) * 100}%` }}
-            />
-          </div>
+          {/* Content */}
+          <div className="flex-1 p-6 sm:p-8">
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-brand-600 dark:text-gray-400">
+                  Exhibit {currentSlide.exhibit} · Onboarding guide
+                </p>
+                <h2 className="mt-1.5 font-serif text-xl font-semibold text-brand-800 dark:text-[#F6F1E7]">
+                  Welcome, {firstName}
+                </h2>
+              </div>
+              <button
+                onClick={finish}
+                className="shrink-0 text-xs font-medium text-brand-600 underline-offset-4 transition hover:text-brand-800 hover:underline dark:text-[#B7C2D6] dark:hover:text-[#F6F1E7]"
+              >
+                Skip guide
+              </button>
+            </div>
 
-          <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="rounded-[24px] border border-white/70 bg-white/80 p-6 shadow-sm backdrop-blur dark:border-brand-800/70 dark:bg-brand-900/30">
-              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-cyan-500 text-white shadow-lg shadow-brand-600/20">
-                <Icon className="h-7 w-7" />
+            <div aria-live="polite">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#F6F1E7] shadow-sm dark:bg-white dark:text-[#14213D]">
+                <Image src={logo} alt="Humri Logo" />
               </div>
 
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              <h3 className="font-serif text-2xl font-semibold text-[#14213D] dark:text-[#F6F1E7]">
                 {currentSlide.title}
               </h3>
-              <p className="mt-3 text-sm leading-7 text-gray-600 dark:text-gray-300">
+              <p className="mt-2.5 max-w-xl text-sm leading-7 text-[#334a45] dark:text-[#CBD3E1]">
                 {currentSlide.description}
               </p>
 
-              <ul className="mt-5 space-y-3 text-sm text-gray-700 dark:text-gray-200">
+              <ul className="mt-5 space-y-2.5">
                 {currentSlide.bullets.map((bullet) => (
                   <li
                     key={bullet}
-                    className="flex items-start gap-2 rounded-xl bg-slate-50/80 px-3 py-2 dark:bg-brand-900/40"
+                    className="flex items-start gap-2.5 text-sm text-[#3A3222] dark:text-[#DCE3EE]"
                   >
-                    <span className="mt-1 text-brand-600">•</span>
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-600 dark:bg-gray-500" />
                     <span>{bullet}</span>
                   </li>
                 ))}
               </ul>
-
-              <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
-                <button
-                  onClick={() => setStep((value) => Math.max(0, value - 1))}
-                  disabled={step === 0}
-                  className="flex items-center gap-1 text-sm font-medium text-gray-600 transition hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </button>
-
-                {step === slides.length - 1 ? (
-                  <button onClick={finish} className="btn text-sm gap-1.5">
-                    Go to dashboard
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setStep((value) => value + 1)}
-                    className="btn text-sm gap-1.5"
-                  >
-                    Next
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
             </div>
 
-            <div className="rounded-[24px] border border-brand-200/70 bg-gradient-to-br from-brand-600 to-cyan-500 p-6 text-white shadow-lg shadow-brand-600/20 dark:border-brand-700">
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand-100">
-                Your next move
-              </p>
-              <h4 className="mt-3 text-xl font-semibold">
-                Start with clarity, finish with confidence.
-              </h4>
-              <p className="mt-3 text-sm leading-7 text-brand-50/90">
-                Review the pool, select a matter that fits your capacity, and
-                begin your journey with a calm, guided start.
-              </p>
-              <div className="mt-6 rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur">
-                <div className="flex items-center justify-between text-sm">
-                  <span>Suggested action</span>
-                  <span className="font-semibold">Matter pool</span>
-                </div>
-                <div className="mt-3 h-2 rounded-full bg-white/20">
-                  <div className="h-2 w-2/3 rounded-full bg-white" />
-                </div>
+            <div className="mt-8 flex items-center justify-between border-t border-[#E4DAC4] pt-5 dark:border-[#2A3A57]">
+              <button
+                onClick={() => goTo(step - 1)}
+                disabled={step === 0}
+                className="flex items-center gap-1 text-sm font-medium text-brand-900 transition hover:text-[#14213D] disabled:cursor-not-allowed disabled:opacity-30 dark:text-[#B7C2D6] dark:hover:text-[#F6F1E7]"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </button>
+
+              <div className="flex items-center gap-1.5" aria-hidden="true">
+                {slides.map((slide, index) => (
+                  <span
+                    key={slide.exhibit}
+                    className={`h-1.5 rounded-full transition-all ${
+                      index === step
+                        ? "w-5 bg-brand-600 dark:bg-[#F6F1E7]"
+                        : "w-1.5 bg-[#E4DAC4] dark:bg-[#2A3A57]"
+                    }`}
+                  />
+                ))}
               </div>
+
+              {isLastStep ? (
+                <button
+                  onClick={finish}
+                  className="flex items-center gap-1.5 rounded-full bg-[#14213D] px-4 py-2 text-sm font-semibold text-[#F6F1E7] shadow-sm transition hover:bg-[#1C2E4A] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#AD8A4E] dark:bg-brand-800 dark:text-gray-300 dark:hover:bg-brand-600"
+                >
+                  Go to dashboard
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => goTo(step + 1)}
+                  className="flex items-center gap-1.5 rounded-full bg-[#14213D] px-4 py-2 text-sm font-semibold text-[#F6F1E7] shadow-sm transition hover:bg-[#1C2E4A] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#AD8A4E] dark:bg-brand-800 dark:text-gray-300 dark:hover:bg-brand-600"
+                >
+                  Next
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
         </div>
