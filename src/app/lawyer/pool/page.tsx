@@ -15,6 +15,23 @@ import { useRouter } from "next/navigation";
 
 const URGENCY_OPTIONS: MatterUrgency[] = ["normal", "urgent", "critical"];
 
+// Helper function to handle non-JSON responses safely
+async function fetchJSON<T = any>(res: Response, fallback: T): Promise<T> {
+  if (!res.ok) {
+    console.error(`[API Error ${res.status}] ${res.url}`);
+    return fallback;
+  }
+  try {
+    return await res.json();
+  } catch (err) {
+    console.error(
+      `[JSON Parse Error] Server returned invalid JSON from ${res.url}`,
+      err,
+    );
+    return fallback;
+  }
+}
+
 export default function MatterPoolPage() {
   const [matters, setMatters] = useState<IMatter[]>([]);
   const router = useRouter();
@@ -25,37 +42,40 @@ export default function MatterPoolPage() {
   const [filterType, setFilterType] = useState("");
   const [filterUrgency, setFilterUrgency] = useState("");
 
-  // Add this state alongside the others
   const [activeCount, setActiveCount] = useState(0);
+  const [maxMatters, setMaxMatters] = useState(3);
 
-  // Update the load function to also fetch the lawyer's active matters
-  const load = useCallback(async () => {
-    setLoading(true);
-    const params = new URLSearchParams({ status: "unassigned" });
-    if (filterType) params.set("type", filterType);
-    if (filterUrgency) params.set("urgency", filterUrgency);
+ const load = useCallback(async () => {
+   setLoading(true);
+   const params = new URLSearchParams({ status: "unassigned" });
+   if (filterType) params.set("type", filterType);
+   if (filterUrgency) params.set("urgency", filterUrgency);
 
-    const [poolRes, activeRes] = await Promise.all([
-      fetch("/api/matters?" + params),
-      fetch("/api/matters?limit=100"), // fetches lawyer's own assigned matters
-    ]);
+   const [poolRes, activeRes, settingsRes] = await Promise.all([
+     fetch("/api/matters?" + params),
+     fetch("/api/matters?limit=100"),
+     fetch("/api/lawyer/settings"), // ← new
+   ]);
 
-    const [poolData, activeData] = await Promise.all([
-      poolRes.json(),
-      activeRes.json(),
-    ]);
+   const [poolData, activeData, settingsData] = await Promise.all([
+     poolRes.json(),
+     activeRes.json(),
+     settingsRes.json(),
+   ]);
 
-    setMatters(poolData.matters ?? []);
-    setActiveCount(
-      (activeData.matters ?? []).filter(
-        (m: { status: string }) =>
-          m.status !== "unassigned" &&
-          m.status !== "completed" &&
-          m.status !== "archived",
-      ).length,
-    );
-    setLoading(false);
-  }, [filterType, filterUrgency]);
+   setMatters(poolData.matters ?? []);
+   setMaxMatters(settingsData.maxMattersPerLawyer ?? 3);
+   setActiveCount(
+     (activeData.matters ?? []).filter(
+       (m: { status: string }) =>
+         m.status !== "unassigned" &&
+         m.status !== "completed" &&
+         m.status !== "archived",
+     ).length,
+   );
+   setLoading(false);
+ }, [filterType, filterUrgency]);
+
   useEffect(() => {
     load();
   }, [load]);
@@ -63,23 +83,30 @@ export default function MatterPoolPage() {
   async function claimMatter(matterId: string) {
     setClaiming(matterId);
     setError(null);
-    const res = await fetch(`/api/matters/${matterId}/claim`, {
-      method: "POST",
-    });
-    const data = await res.json();
-    setClaiming(null);
+    try {
+      const res = await fetch(`/api/matters/${matterId}/claim`, {
+        method: "POST",
+      });
+      const data = await fetchJSON(res, {
+        error: "Failed to process request.",
+      });
+      setClaiming(null);
 
-    if (!res.ok) {
-      setError(data.error);
-      return;
+      if (!res.ok) {
+        setError(data.error);
+        return;
+      }
+
+      setClaimed(matterId);
+      setTimeout(() => {
+        setClaimed(null);
+        load();
+        router.refresh();
+      }, 1500);
+    } catch (err) {
+      setClaiming(null);
+      setError("An unexpected error occurred while claiming the matter.");
     }
-
-    setClaimed(matterId);
-    setTimeout(() => {
-      setClaimed(null);
-      load();
-      router.refresh(); // Refresh the dashboard to reflect the claimed matter
-    }, 1500);
   }
 
   const urgencyOrder: Record<string, number> = {
@@ -145,24 +172,24 @@ export default function MatterPoolPage() {
           </span>
           <span
             className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-              activeCount >= 3
+              activeCount >= maxMatters
                 ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                 : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
             }`}
           >
-            {activeCount}/3 active
+            {activeCount}/{maxMatters} active
           </span>
         </div>
       </div>
 
       {/* Capacity warning */}
-      {activeCount >= 3 && (
+      {activeCount >= maxMatters && (
         <div className="card mb-5 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
-                You have reached the 3-matter limit
+                You have reached the {maxMatters}-matter limit
               </p>
               <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
                 To accept a new matter, complete or release one of your current
@@ -245,7 +272,7 @@ export default function MatterPoolPage() {
                   {m.description}
                 </p>
 
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100  dark:border-gray-600">
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-600">
                   <span className="text-xs text-gray-400">
                     {m.urgency === "critical"
                       ? "⚡ Requires immediate attention"
@@ -255,7 +282,9 @@ export default function MatterPoolPage() {
                   </span>
                   <button
                     onClick={() => claimMatter(m._id)}
-                    disabled={isClaiming || isClaimed}
+                    disabled={
+                      isClaiming || isClaimed || activeCount >= maxMatters
+                    }
                     className={
                       "btn text-xs gap-1.5 " +
                       (isClaimed
