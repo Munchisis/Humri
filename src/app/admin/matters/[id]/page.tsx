@@ -138,7 +138,7 @@ export default function AdminMatterDetailPage() {
                     {urgencyLabels[matter.urgency]}
                   </span>
                 )}
-                <span className={"badge text-xs " + statusStyles[matter.status as MatterStatus]}>
+                <span className={"badge text-xs dark:text-gray-900 " + statusStyles[matter.status as MatterStatus]}>
                   {statusLabels[matter.status as MatterStatus]}
                 </span>
               </div>

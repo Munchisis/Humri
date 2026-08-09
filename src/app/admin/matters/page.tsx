@@ -170,7 +170,7 @@ export default function AdminMattersPage() {
             { _id: string; name: string } | undefined;
           return (
             <div key={m._id} className="card">
-              <div className="flex items-start justify-between gap-3 mb-3">
+              <Link href={`/admin/matters/${m._id}`} className="flex items-start justify-between gap-3 mb-3">
                 <div>
                   <div className="font-medium text-gray-900 dark:text-gray-100">
                     {m.client.firstName} {m.client.lastName}
@@ -189,7 +189,7 @@ export default function AdminMattersPage() {
                 >
                   {urgencyLabels[m.urgency as MatterUrgency]}
                 </span>
-              </div>
+              </Link>
               <div className="flex items-center gap-2 mb-3 flex-wrap">
                 <span className="text-xs text-gray-500 capitalize">
                   {m.type.replace(/_/g, " ")}
