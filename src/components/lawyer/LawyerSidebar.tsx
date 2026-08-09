@@ -5,8 +5,14 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import {
-  Scale, LayoutDashboard, FileText, LogOut,
-  ChevronRight, LifeBuoy, Inbox, Settings,
+  Scale,
+  LayoutDashboard,
+  FileText,
+  LogOut,
+  ChevronRight,
+  LifeBuoy,
+  Inbox,
+  Settings,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { ThemeToggle } from "@/components/shared/themeToggle";
@@ -16,27 +22,37 @@ interface Props {
   user: { name?: string | null; email?: string | null };
 }
 
-interface Alerts { stale: number; warning: number; total: number }
+interface Alerts {
+  stale: number;
+  warning: number;
+  total: number;
+}
 
 const nav = [
-  { href: "/lawyer",          label: "My dashboard",  icon: LayoutDashboard },
-  { href: "/lawyer/pool",     label: "Matter pool",   icon: Inbox           },
-  { href: "/lawyer/matters",  label: "My matters",    icon: FileText        },
-  { href: "/lawyer/support",  label: "Contact admin", icon: LifeBuoy        },
-  { href: "/lawyer/settings", label: "Settings",      icon: Settings        },
+  { href: "/lawyer", label: "My dashboard", icon: LayoutDashboard },
+  { href: "/lawyer/pool", label: "Matter pool", icon: Inbox },
+  { href: "/lawyer/matters", label: "My matters", icon: FileText },
+  { href: "/lawyer/support", label: "Contact admin", icon: LifeBuoy },
+  { href: "/lawyer/settings", label: "Settings", icon: Settings },
 ];
 
 export function LawyerSidebar({ user }: Props) {
   const pathname = usePathname();
-  const [alerts, setAlerts] = useState<Alerts>({ stale: 0, warning: 0, total: 0 });
+  const [alerts, setAlerts] = useState<Alerts>({
+    stale: 0,
+    warning: 0,
+    total: 0,
+  });
 
   useEffect(() => {
     async function fetchAlerts() {
       try {
-        const res  = await fetch("/api/lawyer/alerts");
+        const res = await fetch("/api/lawyers/alerts");
         const data = await res.json();
         setAlerts(data);
-      } catch { /* non-critical */ }
+      } catch {
+        /* non-critical */
+      }
     }
     fetchAlerts();
     const interval = setInterval(fetchAlerts, 60_000);

@@ -45,36 +45,36 @@ export default function MatterPoolPage() {
   const [activeCount, setActiveCount] = useState(0);
   const [maxMatters, setMaxMatters] = useState(3);
 
- const load = useCallback(async () => {
-   setLoading(true);
-   const params = new URLSearchParams({ status: "unassigned" });
-   if (filterType) params.set("type", filterType);
-   if (filterUrgency) params.set("urgency", filterUrgency);
+  const load = useCallback(async () => {
+    setLoading(true);
+    const params = new URLSearchParams({ status: "unassigned" });
+    if (filterType) params.set("type", filterType);
+    if (filterUrgency) params.set("urgency", filterUrgency);
 
-   const [poolRes, activeRes, settingsRes] = await Promise.all([
-     fetch("/api/matters?" + params),
-     fetch("/api/matters?limit=100"),
-     fetch("/api/lawyer/settings"), // ← new
-   ]);
+    const [poolRes, activeRes, settingsRes] = await Promise.all([
+      fetch("/api/matters?" + params),
+      fetch("/api/matters?limit=100"),
+      fetch("/api/lawyers/settings"),
+    ]);
 
-   const [poolData, activeData, settingsData] = await Promise.all([
-     poolRes.json(),
-     activeRes.json(),
-     settingsRes.json(),
-   ]);
+    const [poolData, activeData, settingsData] = await Promise.all([
+      poolRes.json(),
+      activeRes.json(),
+      settingsRes.json(),
+    ]);
 
-   setMatters(poolData.matters ?? []);
-   setMaxMatters(settingsData.maxMattersPerLawyer ?? 3);
-   setActiveCount(
-     (activeData.matters ?? []).filter(
-       (m: { status: string }) =>
-         m.status !== "unassigned" &&
-         m.status !== "completed" &&
-         m.status !== "archived",
-     ).length,
-   );
-   setLoading(false);
- }, [filterType, filterUrgency]);
+    setMatters(poolData.matters ?? []);
+    setMaxMatters(settingsData.maxMattersPerLawyer ?? 3);
+    setActiveCount(
+      (activeData.matters ?? []).filter(
+        (m: { status: string }) =>
+          m.status !== "unassigned" &&
+          m.status !== "completed" &&
+          m.status !== "archived",
+      ).length,
+    );
+    setLoading(false);
+  }, [filterType, filterUrgency]);
 
   useEffect(() => {
     load();
