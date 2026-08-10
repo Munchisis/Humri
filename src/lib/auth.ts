@@ -95,17 +95,38 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
+      // On initial sign in
       if (user) {
         token.id = user.id;
         token.role = (user as any).role;
         token.roles = (user as any).roles ?? [(user as any).role];
         token.emailVerified = (user as any).emailVerified;
-        // Remember me: 30 days vs 1 day
+        token.isApproved = (user as any).isApproved;
         if ((user as any).rememberMe) {
           token.exp = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
         }
       }
+
+      // On every session check — re-read approval status from DB
+      if (token.id) {
+        try {
+          await connectDB();
+          const fresh = await User.findById(token.id)
+            .select("isApproved role roles emailVerified name")
+            .lean();
+          if (fresh) {
+            token.isApproved = fresh.isApproved;
+            token.role = fresh.role;
+            token.roles = fresh.roles ?? [fresh.role];
+            token.emailVerified = fresh.emailVerified;
+            token.name = fresh.name;
+          }
+        } catch (err) {
+          console.error("[JWT] DB refresh failed:", err);
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
@@ -114,6 +135,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).role = token.role;
         (session.user as any).roles = token.roles ?? [token.role];
         (session.user as any).emailVerified = token.emailVerified;
+        (session.user as any).isApproved = token.isApproved;
       }
       return session;
     },

@@ -64,17 +64,31 @@ export async function POST(
       );
     }
 
-    const updatedMatter = await Matter.findOneAndUpdate(
-      { _id: params.id, assignedLawyer: { $exists: false } },
-      {
-        $set: {
-          assignedLawyer: lawyerId,
-          status:         "assigned",
-          stage:          "client_consultation",
+   const updatedMatter = await Matter.findOneAndUpdate(
+     {
+       _id: params.id,
+       $or: [{ assignedLawyer: { $exists: false } }, { assignedLawyer: null }],
+     },
+     {
+       $set: {
+         assignedLawyer: lawyerId,
+         status: "assigned",
+         stage: "client_consultation",
+       },
+     },
+     { new: true },
+   );
+    
+    const lawyerUser = await User.findById(session.user.id).select("isActive").lean();
+    if (!lawyerUser?.isActive) {
+      return NextResponse.json(
+        {
+          error:
+            "Your lawyer account is currently inactive or pending verification.",
         },
-      },
-      { new: true }
-    );
+        { status: 403 },
+      );
+    }
 
     if (!updatedMatter) {
       const exists = await Matter.exists({ _id: params.id });
