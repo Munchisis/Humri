@@ -79,8 +79,8 @@ export default function AboutPage() {
             </div>
             <h3 className="font-medium mb-1.5">Vetted volunteers</h3>
             <p className="text-sm text-gray-500 leading-relaxed">
-              Every volunteer lawyer's registration is reviewed before they can
-              take on a matter through the platform.
+              Every volunteer lawyer&apos;s registration is reviewed before they
+              can take on a matter through the platform.
             </p>
           </div>
         </div>
@@ -89,8 +89,8 @@ export default function AboutPage() {
           <div className="card border border-emerald-900/5 bg-emerald-800 text-white">
             <h3 className="font-medium text-lg mb-2">Need legal help?</h3>
             <p className="text-sm text-emerald-100/90 mb-5 leading-relaxed">
-              Tell us what's going on and we'll connect you with a volunteer
-              lawyer who can help.
+              Tell us what&apos;s going on and we&apos;ll connect you with a
+              volunteer lawyer who can help.
             </p>
             <Link
               href="/submit"

@@ -53,7 +53,7 @@ export default async function AdminDashboard() {
           Good morning, {session?.user.name?.split(" ")[0]}
         </h1>
         <p className="text-sm text-gray-500 mt-1">
-          Here's what's happening on HUMRI today.
+          Here&apos;s what&apos;s happening on HUMRI today.
         </p>
       </div>
 
