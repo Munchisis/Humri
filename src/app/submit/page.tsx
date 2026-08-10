@@ -44,6 +44,7 @@ export default function SubmitPage() {
     description: "",
     urgency: "normal" as Urgency,
   });
+  
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [refNum, setRefNum] = useState("");
@@ -63,6 +64,8 @@ export default function SubmitPage() {
     }
   };
 
+
+
   // Capitalization helper to clean user names on the fly
   const capitalizeWords = (str: string): string => {
     return str
@@ -76,6 +79,14 @@ export default function SubmitPage() {
   }
 
 
+   const isFormValid =
+     form.firstName.trim() !== "" &&
+     form.lastName.trim() !== "" &&
+     form.email.trim() !== "" &&
+     form.state !== "" &&
+     form.type !== "" &&
+     form.description.trim().length >= 20 &&
+     hasConsented;
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -402,8 +413,12 @@ export default function SubmitPage() {
 
           <button
             type="submit"
-            disabled={loading}
-            className="btn btn-primary w-full justify-center py-3 text-base"
+            disabled={!isFormValid || loading}
+            className={`w-full justify-center py-3 text-base font-semibold rounded-xl text-white transition-all flex items-center gap-2 ${
+              isFormValid && !loading
+                ? "bg-emerald-700 hover:bg-emerald-800 cursor-pointer shadow-sm"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed opacity-70 border border-gray-200 dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700"
+            }`}
           >
             {loading ? (
               <>

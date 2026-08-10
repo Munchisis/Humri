@@ -109,6 +109,16 @@ export default function RegisterPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  const isFormValid =
+    form.name.trim() !== "" &&
+    form.email.trim() !== "" &&
+    passwordValid &&
+    passwordsMatch &&
+    form.barNumber.trim() !== "" &&
+    form.state !== "" &&
+    form.specialisation !== "" &&
+    hasConsented;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -503,12 +513,8 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              disabled={
-                loading ||
-                (form.password.length > 0 && !passwordValid) ||
-                passwordsMismatch
-              }
-              className="btn w-full justify-center py-2.5 mt-1 bg-emerald-800 hover:bg-emerald-900 text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              disabled={!isFormValid || loading}
+              className="btn w-full justify-center py-2.5 mt-1 font-medium text-white bg-emerald-700 hover:bg-emerald-800 disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-200 disabled:cursor-not-allowed disabled:opacity-70 dark:disabled:bg-gray-800 dark:disabled:text-gray-500 dark:disabled:border-gray-700 transition-all"
             >
               {loading ? (
                 <>
