@@ -7,6 +7,21 @@ const APP_URL =
   process.env.NEXTAUTH_URL ??
   "http://localhost:3000";
 
+// The Resend Node SDK does NOT throw on API-level errors (unverified
+// sender, invalid recipient, rate limits, etc.) — it resolves with
+// { data, error } either way. Every send goes through this helper so a
+// rejected send actually throws, which lets every call site's existing
+// try/catch blocks do their job.
+async function send(payload: Parameters<typeof resend.emails.send>[0]) {
+  const { data, error } = await resend.emails.send(payload);
+  if (error) {
+    throw new Error(
+      `Resend rejected the email (${error.name ?? "unknown"}): ${error.message ?? "no message"}`,
+    );
+  }
+  return data;
+}
+
 // ─── Matter submitted (to client) ────────────────────────────────────────────
 export async function sendMatterSubmitted({
   clientName,
@@ -19,7 +34,7 @@ export async function sendMatterSubmitted({
   referenceNumber: string;
   matterType: string;
 }) {
-  await resend.emails.send({
+  await send({
     from: FROM,
     to: clientEmail,
     subject: `Your matter has been received ${referenceNumber}`,
@@ -73,7 +88,7 @@ export async function sendLawyerAssigned({
   lawyerName: string;
   lawyerSpecialisation: string;
 }) {
-  await resend.emails.send({
+  await send({
     from: FROM,
     to: clientEmail,
     subject: `A lawyer has been assigned to your matter ${referenceNumber}`,
@@ -112,6 +127,54 @@ export async function sendLawyerAssigned({
   });
 }
 
+// ─── Matter stage updated (to client) ────────────────────────────────────────
+export async function sendMatterStageUpdated({
+  clientName,
+  clientEmail,
+  referenceNumber,
+  stageLabel,
+}: {
+  clientName: string;
+  clientEmail: string;
+  referenceNumber: string;
+  stageLabel: string;
+}) {
+  await send({
+    from: FROM,
+    to: clientEmail,
+    subject: `Update on your matter ${referenceNumber}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+        <div style="background:#085041;padding:24px 32px;border-radius:12px 12px 0 0">
+          <h1 style="color:#E1F5EE;font-size:20px;margin:0">HumRi</h1>
+          <p style="color:#9FE1CB;font-size:12px;margin:4px 0 0">Pro bono legal aid</p>
+        </div>
+        <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
+          <p style="margin:0 0 16px">Dear <strong>${clientName}</strong>,</p>
+          <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
+            There's an update on your matter <strong>${referenceNumber}</strong>.
+          </p>
+          <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:20px;margin:24px 0;text-align:center">
+            <p style="margin:0 0 4px;font-size:12px;color:#15803D;text-transform:uppercase;letter-spacing:.05em">Current stage</p>
+            <p style="margin:0;font-size:20px;font-weight:700;color:#085041">${stageLabel}</p>
+          </div>
+          <p style="margin:0 0 24px;color:#4b5563;line-height:1.6">
+            You can track full progress on your matter at any time using the link below.
+          </p>
+          <a href="${APP_URL}/track?ref=${referenceNumber}"
+            style="display:inline-block;background:#085041;color:#E1F5EE;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500;font-size:14px">
+            Track your matter →
+          </a>
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0">
+          <p style="margin:0;font-size:12px;color:#9ca3af">
+            This is an automated message from HumRi. Please do not reply to this email.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}
+
 // ─── Matter completed (to client) ────────────────────────────────────────────
 export async function sendMatterCompleted({
   clientName,
@@ -124,7 +187,7 @@ export async function sendMatterCompleted({
   referenceNumber: string;
   lawyerName: string;
 }) {
-  await resend.emails.send({
+  await send({
     from: FROM,
     to: clientEmail,
     subject: `Your matter has been resolved ${referenceNumber}`,
@@ -172,7 +235,7 @@ export async function sendAdminNewMatter({
   matterType: string;
   urgency: string;
 }) {
-  await resend.emails.send({
+  await send({
     from: FROM,
     to: adminEmail,
     subject: `New matter submitted ${referenceNumber} ${urgency === "critical" ? "⚡ CRITICAL" : urgency === "urgent" ? "🕐 Urgent" : ""}`,
@@ -207,7 +270,7 @@ export async function sendLawyerApproved({
   lawyerName: string;
   lawyerEmail: string;
 }) {
-  await resend.emails.send({
+  await send({
     from: FROM,
     to: lawyerEmail,
     subject: "Your HUMRI account has been approved",
@@ -276,7 +339,7 @@ export async function sendLawyerSuspended({
   lawyerName: string;
   lawyerEmail: string;
 }) {
-  await resend.emails.send({
+  await send({
     from: FROM,
     to: lawyerEmail,
     subject: "Your HUMRI account has been suspended",

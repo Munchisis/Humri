@@ -5,7 +5,12 @@ import { connectDB } from "@/lib/db";
 import Matter from "@/models/Matter";
 import User from "@/models/User";
 import { authOptions } from "@/lib/auth";
-import { sendMatterCompleted } from "@/lib/email";
+import {
+  sendMatterCompleted,
+  sendLawyerAssigned,
+  sendMatterStageUpdated, // NOTE: add this to lib/email if it doesn't exist yet —
+  // see the note below the code for a suggested signature.
+} from "@/lib/email";
 
 // ─── Get single matter ────────────────────────────────────────────────────────
 
@@ -81,6 +86,17 @@ const UpdateSchema = z.object({
   note: z.string().min(1).max(1000).optional(),
 });
 
+const STAGE_LABELS: Record<string, string> = {
+  intake: "Intake",
+  client_consultation: "Client consultation",
+  document_review: "Document review",
+  filing: "Filing",
+  negotiation: "Negotiation",
+  hearing: "Hearing",
+  awaiting_judgment: "Awaiting judgment",
+  completed: "Completed",
+};
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } },
@@ -110,6 +126,11 @@ export async function PATCH(
 
     const { assignedLawyer, status, stage, note } = parsed.data;
 
+    // Tracks whether the "matter completed" email has already gone out this
+    // request, so the status branch and the stage branch can't both send it
+    // when a single request sets both fields to "completed" at once.
+    let completedEmailSent = false;
+
     // Only admins can assign lawyers or change assignment
     if (assignedLawyer !== undefined) {
       if (session.user.role !== "admin") {
@@ -131,9 +152,31 @@ export async function PATCH(
       matter.status = "assigned";
 
       // Increment new lawyer's active count
-      await User.findByIdAndUpdate(assignedLawyer, {
-        $inc: { activeMatters: 1 },
-      });
+      const newLawyer = await User.findByIdAndUpdate(
+        assignedLawyer,
+        { $inc: { activeMatters: 1 } },
+        { new: true },
+      )
+        .select("name specialisation")
+        .lean();
+
+      // Notify the client that a lawyer has been assigned. This was
+      // previously only sent when a lawyer self-claimed a matter — admin
+      // assignment through this endpoint never told the client at all.
+      try {
+        await sendLawyerAssigned({
+          clientName: `${matter.client.firstName} ${matter.client.lastName}`,
+          clientEmail: matter.client.email,
+          referenceNumber: matter.referenceNumber,
+          lawyerName: newLawyer?.name ?? "Your lawyer",
+          lawyerSpecialisation: newLawyer?.specialisation ?? "",
+        });
+      } catch (err) {
+        console.error("[PATCH email - assigned]", {
+          matterId: matter._id,
+          err,
+        });
+      }
     }
 
     // Lawyers can update status and stage for their own matters; admins can do either
@@ -166,8 +209,12 @@ export async function PATCH(
             referenceNumber: matter.referenceNumber,
             lawyerName: lawyer?.name ?? "Your lawyer",
           });
+          completedEmailSent = true;
         } catch (err) {
-          console.error("[EMAIL]", err);
+          console.error("[PATCH email - completed]", {
+            matterId: matter._id,
+            err,
+          });
         }
         // Update lawyer's stats
         if (matter.assignedLawyer) {
@@ -215,7 +262,54 @@ export async function PATCH(
 
       if (stage === "completed") {
         matter.status = "completed";
-      } else if (matter.status === "assigned") {
+
+        // Reached "completed" via the stage field rather than the status
+        // field (e.g. the admin's stage-override dropdown) — send the same
+        // completed email, unless the status branch above already sent it
+        // for this same request.
+        if (!completedEmailSent) {
+          try {
+            const lawyer = matter.assignedLawyer
+              ? await User.findById(matter.assignedLawyer).select("name").lean()
+              : null;
+            await sendMatterCompleted({
+              clientName: `${matter.client.firstName} ${matter.client.lastName}`,
+              clientEmail: matter.client.email,
+              referenceNumber: matter.referenceNumber,
+              lawyerName: lawyer?.name ?? "Your lawyer",
+            });
+            completedEmailSent = true;
+          } catch (err) {
+            console.error("[PATCH email - completed via stage]", {
+              matterId: matter._id,
+              err,
+            });
+          }
+          if (matter.assignedLawyer) {
+            await User.findByIdAndUpdate(matter.assignedLawyer, {
+              $inc: { activeMatters: -1, completedMatters: 1 },
+            });
+          }
+        }
+      } else {
+        // Any other stage progression — let the client know the matter has
+        // moved forward. This previously sent no notification at all.
+        try {
+          await sendMatterStageUpdated({
+            clientName: `${matter.client.firstName} ${matter.client.lastName}`,
+            clientEmail: matter.client.email,
+            referenceNumber: matter.referenceNumber,
+            stageLabel: STAGE_LABELS[stage] ?? stage,
+          });
+        } catch (err) {
+          console.error("[PATCH email - stage updated]", {
+            matterId: matter._id,
+            err,
+          });
+        }
+      }
+
+      if (matter.status === "assigned") {
         matter.status = "in_progress";
       }
     }

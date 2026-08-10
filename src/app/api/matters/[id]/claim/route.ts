@@ -9,7 +9,11 @@ import User from "@/models/User";
 import { sendLawyerAssigned } from "@/lib/email";
 
 const PROGRESS_STAGES = [
-  "document_review","filing","negotiation","hearing","awaiting_judgment",
+  "document_review",
+  "filing",
+  "negotiation",
+  "hearing",
+  "awaiting_judgment",
 ];
 
 function hasRole(session: any, role: string): boolean {
@@ -19,7 +23,7 @@ function hasRole(session: any, role: string): boolean {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -31,55 +35,21 @@ export async function POST(
     if (!hasRole(session, "lawyer")) {
       return NextResponse.json(
         { error: "Only lawyers can claim matters." },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     await connectDB();
 
-    const settings   = await getPlatformSettings();
-    const MAX_ACTIVE = settings.maxMattersPerLawyer;
-    const lawyerId   = new mongoose.Types.ObjectId(session.user.id);
+    const lawyerId = new mongoose.Types.ObjectId(session.user.id);
 
-    const activeMatters = await Matter.find({
-      assignedLawyer: lawyerId,
-      status: { $in: ["assigned","in_progress","under_review"] },
-    }).select("stage");
+    // Fetch the lawyer once, up front, and confirm they're active BEFORE
+    // touching the matter. This must happen before any write — claiming
+    // a matter is not reversible just by returning an error afterwards.
+    const lawyerUser = await User.findById(lawyerId)
+      .select("isActive name specialisation")
+      .lean();
 
-    if (activeMatters.length >= MAX_ACTIVE) {
-      const hasProgress = activeMatters.some(m => PROGRESS_STAGES.includes(m.stage));
-      if (!hasProgress) {
-        return NextResponse.json(
-          {
-            error: `You have ${activeMatters.length} active matter${activeMatters.length !== 1 ? "s" : ""} with no meaningful progress. Please advance at least one to Document Review stage before accepting new ones.`,
-          },
-          { status: 403 }
-        );
-      }
-      return NextResponse.json(
-        {
-          error: `You already have ${MAX_ACTIVE} active matter${MAX_ACTIVE !== 1 ? "s" : ""}. Please complete or release one before accepting a new matter.`,
-        },
-        { status: 403 }
-      );
-    }
-
-   const updatedMatter = await Matter.findOneAndUpdate(
-     {
-       _id: params.id,
-       $or: [{ assignedLawyer: { $exists: false } }, { assignedLawyer: null }],
-     },
-     {
-       $set: {
-         assignedLawyer: lawyerId,
-         status: "assigned",
-         stage: "client_consultation",
-       },
-     },
-     { new: true },
-   );
-    
-    const lawyerUser = await User.findById(session.user.id).select("isActive").lean();
     if (!lawyerUser?.isActive) {
       return NextResponse.json(
         {
@@ -90,39 +60,92 @@ export async function POST(
       );
     }
 
-    if (!updatedMatter) {
-      const exists = await Matter.exists({ _id: params.id });
-      if (!exists) return NextResponse.json({ error: "Matter not found." }, { status: 404 });
+    const settings = await getPlatformSettings();
+    const MAX_ACTIVE = settings.maxMattersPerLawyer;
+
+    const activeMatters = await Matter.find({
+      assignedLawyer: lawyerId,
+      status: { $in: ["assigned", "in_progress", "under_review"] },
+    }).select("stage");
+
+    if (activeMatters.length >= MAX_ACTIVE) {
+      const hasProgress = activeMatters.some((m) =>
+        PROGRESS_STAGES.includes(m.stage),
+      );
+      if (!hasProgress) {
+        return NextResponse.json(
+          {
+            error: `You have ${activeMatters.length} active matter${activeMatters.length !== 1 ? "s" : ""} with no meaningful progress. Please advance at least one to Document Review stage before accepting new ones.`,
+          },
+          { status: 403 },
+        );
+      }
       return NextResponse.json(
-        { error: "This matter has already been claimed by another lawyer." },
-        { status: 409 }
+        {
+          error: `You already have ${MAX_ACTIVE} active matter${MAX_ACTIVE !== 1 ? "s" : ""}. Please complete or release one before accepting a new matter.`,
+        },
+        { status: 403 },
       );
     }
 
-    const lawyer = await User.findByIdAndUpdate(
-      session.user.id,
-      { $inc: { activeMatters: 1 } },
-      { new: true }
-    ).select("name specialisation").lean();
+    // Only now do we actually mutate the matter — every earlier check that
+    // could reject the claim has already happened.
+    const updatedMatter = await Matter.findOneAndUpdate(
+      {
+        _id: params.id,
+        $or: [{ assignedLawyer: { $exists: false } }, { assignedLawyer: null }],
+      },
+      {
+        $set: {
+          assignedLawyer: lawyerId,
+          status: "assigned",
+          stage: "client_consultation",
+        },
+      },
+      { new: true },
+    );
+
+    if (!updatedMatter) {
+      const exists = await Matter.exists({ _id: params.id });
+      if (!exists)
+        return NextResponse.json(
+          { error: "Matter not found." },
+          { status: 404 },
+        );
+      return NextResponse.json(
+        { error: "This matter has already been claimed by another lawyer." },
+        { status: 409 },
+      );
+    }
+
+    await User.findByIdAndUpdate(lawyerId, { $inc: { activeMatters: 1 } });
 
     try {
       await sendLawyerAssigned({
-        clientName:           `${updatedMatter.client.firstName} ${updatedMatter.client.lastName}`,
-        clientEmail:          updatedMatter.client.email,
-        referenceNumber:      updatedMatter.referenceNumber,
-        lawyerName:           lawyer?.name ?? "Your lawyer",
-        lawyerSpecialisation: lawyer?.specialisation ?? "",
+        clientName: `${updatedMatter.client.firstName} ${updatedMatter.client.lastName}`,
+        clientEmail: updatedMatter.client.email,
+        referenceNumber: updatedMatter.referenceNumber,
+        lawyerName: lawyerUser.name ?? "Your lawyer",
+        lawyerSpecialisation: lawyerUser.specialisation ?? "",
       });
     } catch (err) {
-      console.error("[CLAIM email]", err);
+      // TODO: this currently fails silently from the client's perspective —
+      // the matter IS assigned, but if this throws, the client never finds
+      // out by email. At minimum, log with enough context to find these
+      // later (e.g. a "notificationFailed" flag on the matter), and
+      // consider alerting or a retry queue rather than console.error alone.
+      console.error("[CLAIM email]", { matterId: updatedMatter._id, err });
     }
 
     return NextResponse.json({
-      message:         "Matter claimed successfully.",
+      message: "Matter claimed successfully.",
       referenceNumber: updatedMatter.referenceNumber,
     });
   } catch (err) {
     console.error("[MATTER CLAIM]", err);
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error." },
+      { status: 500 },
+    );
   }
 }
