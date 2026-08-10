@@ -76,13 +76,18 @@ export default function RoleSwitcher() {
         </div>
 
         {/* Toggle */}
-        <button onClick={toggle} disabled={saving}
+        <button
+          onClick={toggle}
+          disabled={saving}
           className={`relative shrink-0 w-11 h-6 rounded-full transition-colors focus:outline-none ${
             isLawyer ? "bg-brand-600" : "bg-gray-300 dark:bg-gray-600"
-          }`}>
-          <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-            isLawyer ? "translate-x-5" : "translate-x-0"
-          }`} />
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+              isLawyer ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
           {saving && (
             <span className="absolute inset-0 flex items-center justify-center">
               <Loader2 className="w-3 h-3 text-white animate-spin" />
@@ -93,31 +98,37 @@ export default function RoleSwitcher() {
 
       {isLawyer && (
         <div className="p-4 bg-brand-50 dark:bg-brand-900/20 border border-brand-200 dark:border-brand-800 rounded-xl">
-          <p className="text-xs font-medium text-brand-800 dark:text-brand-300 mb-2">
+          <p className="text-xs font-medium text-brand-800 dark:text-gray-300 mb-2 ">
             Lawyer portal access
           </p>
           <div className="flex flex-col gap-2">
             <button
               onClick={() => router.push("/lawyer")}
-              className="btn btn-primary text-xs justify-center py-2">
+              className="btn btn-primary text-xs justify-center py-2"
+            >
               Go to lawyer dashboard →
             </button>
-            <p className="text-xs text-brand-600 dark:text-brand-400 text-center">
-              Your admin session stays active, you can switch between portals freely.
+            <p className="text-xs text-brand-600 dark:text-gray-400 text-center">
+              Your admin session stays active, you can switch between portals
+              freely.
             </p>
           </div>
         </div>
       )}
 
       {msg.text && (
-        <div className={`flex items-start gap-2 text-sm rounded-xl px-4 py-3 ${
-          msg.error
-            ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400"
-            : "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400"
-        }`}>
-          {msg.error
-            ? <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-            : <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />}
+        <div
+          className={`flex items-start gap-2 text-sm rounded-xl px-4 py-3 ${
+            msg.error
+              ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400"
+              : "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400"
+          }`}
+        >
+          {msg.error ? (
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          ) : (
+            <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          )}
           {msg.text}
         </div>
       )}

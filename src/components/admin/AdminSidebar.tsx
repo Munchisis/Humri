@@ -5,9 +5,15 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import {
-  LayoutDashboard, FileText, Users,
-  LogOut, ChevronRight, MessageSquare, Settings,
-  BarChart2, UserX,
+  LayoutDashboard,
+  FileText,
+  Users,
+  LogOut,
+  ChevronRight,
+  MessageSquare,
+  Settings,
+  BarChart2,
+  UserX,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { ThemeToggle } from "@/components/shared/themeToggle";
@@ -18,26 +24,28 @@ interface Props {
 }
 
 const nav = [
-  { href: "/admin",                   label: "Dashboard",       icon: LayoutDashboard },
-  { href: "/admin/matters",           label: "All matters",      icon: FileText        },
-  { href: "/admin/lawyers",           label: "Lawyers",          icon: Users           },
-  { href: "/admin/lawyers/inactive",  label: "Activity report",  icon: UserX           },
-  { href: "/admin/analytics",         label: "Analytics",        icon: BarChart2       },
-  { href: "/admin/messages",          label: "Messages",         icon: MessageSquare   },
-  { href: "/admin/settings",          label: "Settings",         icon: Settings        },
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/admin/matters", label: "All matters", icon: FileText },
+  { href: "/admin/lawyers", label: "Lawyers", icon: Users, exact: true },
+  { href: "/admin/lawyers/inactive", label: "Activity report", icon: UserX },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
+  { href: "/admin/messages", label: "Messages", icon: MessageSquare },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 export function AdminSidebar({ user }: Props) {
-  const pathname     = usePathname();
+  const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     async function fetchUnread() {
       try {
-        const res  = await fetch("/api/messages?status=unread");
+        const res = await fetch("/api/messages?status=unread");
         const data = await res.json();
         setUnreadCount((data.messages ?? []).length);
-      } catch { /* non-critical */ }
+      } catch {
+        /* non-critical */
+      }
     }
     fetchUnread();
     const interval = setInterval(fetchUnread, 60_000);
@@ -45,7 +53,7 @@ export function AdminSidebar({ user }: Props) {
   }, []);
 
   return (
-    <aside className="w-60 shrink-0 bg-gradient-to-br from-brand-900 via-brand-600 to-brand-800 flex flex-col min-h-screen dark:bg-gray-900">
+    <aside className="w-60 shrink-0 bg-gradient-to-br from-brand-900 via-brand-600 to-brand-800 flex flex-col min-h-screen dark:from-gray-900 dark:via-slate-800 dark:to-gray-800">
       <div className="flex items-center gap-3 px-5 py-5 border-b border-brand-800 shadow-lg">
         <Link
           href="/"
@@ -65,10 +73,10 @@ export function AdminSidebar({ user }: Props) {
       </div>
 
       <nav className="flex-1 py-4 px-3 space-y-0.5">
-        {nav.map(({ href, label, icon: Icon }) => {
-          const active =
-            pathname === href ||
-            (href !== "/admin" && pathname.startsWith(href));
+        {nav.map(({ href, label, icon: Icon, exact }) => {
+          const active = exact
+            ? pathname === href
+            : pathname === href || pathname.startsWith(`${href}/`);
           const isMessages = href === "/admin/messages";
           const showBadge = isMessages && unreadCount > 0;
 
@@ -79,8 +87,8 @@ export function AdminSidebar({ user }: Props) {
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all",
                 active
-                  ? "bg-brand-800 text-brand-50 font-medium"
-                  : "text-gray-300 hover:bg-brand-800 hover:text-brand-50",
+                  ? "bg-brand-800 text-brand-50 font-medium dark:bg-gray-900/60 dark:text-brand-50 dark:border dark:border-gray-500"
+                  : "text-gray-300 hover:bg-brand-800 hover:text-brand-50 dark:hover:bg-gray-900/60",
               )}
             >
               <Icon className="w-4 h-4 shrink-0" />
@@ -124,11 +132,3 @@ export function AdminSidebar({ user }: Props) {
     </aside>
   );
 }
-
-
-
-
-
-
-   
- 

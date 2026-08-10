@@ -60,11 +60,11 @@ export function LawyerSidebar({ user }: Props) {
   }, []);
 
   return (
-    <aside className="w-60 shrink-0 bg-gradient-to-br from-gray-900 via-gray-800 to-brand-800 flex flex-col min-h-screen">
+    <aside className="w-60 shrink-0 bg-gradient-to-br from-gray-900 via-gray-800 to-brand-800 flex flex-col min-h-screen dark:from-gray-900 dark:via-slate-800 dark:to-gray-800">
       <div className="flex items-center gap-3 px-5 py-5 border-b border-brand-800 shadow-lg">
         <Link
           href="/"
-          className="w-10 h-10 dark:shadow-sm dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0"
+          className="w-10 h-10 dark:shadow-sm dark:bg-slate-300 rounded-full flex items-center justify-center shrink-0"
         >
           <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
         </Link>
