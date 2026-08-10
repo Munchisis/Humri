@@ -1,46 +1,65 @@
-import { withAuth } from "next-auth/middleware";
-import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import User from "@/models/User";
+import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export default withAuth(
-  async function middleware(req) {
-    const { token } = req.nextauth;
-    const { pathname } = req.nextUrl;
+export async function middleware(req: NextRequest) {
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const { pathname } = req.nextUrl;
 
-    // No token = redirect to login (handled by withAuth config below)
-    if (!token) return NextResponse.redirect(new URL("/auth/login", req.url));
+  const roles: string[] = (token?.roles as string[]) ?? (token?.role ? [token.role as string] : []);
+  const isAdmin  = roles.includes("admin");
+  const isLawyer = roles.includes("lawyer");
+  const isAuth   = !!token;
 
-    // Lawyer trying to access admin routes
-    if (pathname.startsWith("/admin") && token.role !== "admin") {
-      return NextResponse.redirect(new URL("/lawyer", req.url));
+  // ── Admin routes ──────────────────────────────────────────────────────────
+  if (pathname.startsWith("/admin")) {
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL("/auth/login", req.url));
     }
-
-    // Admin trying to access lawyer-only routes
-    if (pathname.startsWith("/lawyer") && token.role !== "lawyer") {
-      return NextResponse.redirect(new URL("/admin", req.url));
-    }
-
-    // Lawyer account not yet approved or suspended after login
-    if (token.role === "lawyer") {
-      await connectDB();
-      const lawyer = await User.findById(token.id).select("isApproved").lean();
-      if (!lawyer?.isApproved) {
-        return NextResponse.redirect(new URL("/auth/pending", req.url));
-      }
-    }
-
     return NextResponse.next();
-  },
-  {
-    callbacks: {
-      // Only run the middleware function above when a token exists
-      authorized: ({ token }) => !!token,
-    },
-  },
-);
+  }
 
-// Protect these route prefixes — public routes (/, /submit, /track, /auth/*) are excluded
+  // ── Lawyer routes ─────────────────────────────────────────────────────────
+  if (pathname.startsWith("/lawyer")) {
+    // Admins with lawyer role OR pure lawyers can access
+    if (!isAuth) {
+      return NextResponse.redirect(new URL("/auth/login", req.url));
+    }
+    if (!isLawyer && !isAdmin) {
+      return NextResponse.redirect(new URL("/auth/login", req.url));
+    }
+    return NextResponse.next();
+  }
+
+  // ── API: admin-only routes ────────────────────────────────────────────────
+  if (pathname.startsWith("/api/admin")) {
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    return NextResponse.next();
+  }
+
+  // ── API: lawyer routes (admins with lawyer role can also access) ──────────
+  if (
+    pathname.startsWith("/api/lawyer") ||
+    pathname.startsWith("/api/messages") ||
+    pathname.startsWith("/api/user")
+  ) {
+    if (!isAuth) {
+      return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+    }
+    return NextResponse.next();
+  }
+
+  return NextResponse.next();
+}
+
 export const config = {
-  matcher: ["/admin/:path*", "/lawyer/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/lawyer/:path*",
+    "/api/admin/:path*",
+    "/api/lawyer/:path*",
+    "/api/messages/:path*",
+    "/api/user/:path*",
+  ],
 };

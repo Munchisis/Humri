@@ -32,10 +32,11 @@ export async function GET(
     // Lawyers can view matters assigned to them, and unassigned matters in the pool
     if (session.user.role === "lawyer") {
       const assignedId = matter.assignedLawyer
-  ? (typeof matter.assignedLawyer === "object" && matter.assignedLawyer !== null
-      ? (matter.assignedLawyer as any)._id?.toString()
-      : String(matter.assignedLawyer)) // Safely forces any primitive/ObjectId to string
-  : null;
+        ? typeof matter.assignedLawyer === "object" &&
+          matter.assignedLawyer !== null
+          ? (matter.assignedLawyer as any)._id?.toString()
+          : String(matter.assignedLawyer) // Safely forces any primitive/ObjectId to string
+        : null;
       if (assignedId && assignedId !== session.user.id) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
@@ -137,12 +138,20 @@ export async function PATCH(
 
     // Lawyers can update status and stage for their own matters; admins can do either
     if (status !== undefined) {
+      if (status === "archived" && session.user.role !== "admin") {
+        return NextResponse.json(
+          { error: "Only admins can archive matters." },
+          { status: 403 },
+        );
+      }
+
       if (
         session.user.role === "lawyer" &&
         matter.assignedLawyer?.toString() !== session.user.id
       ) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
+
       matter.status = status;
 
       if (status === "completed") {
@@ -166,6 +175,17 @@ export async function PATCH(
             $inc: { activeMatters: -1, completedMatters: 1 },
           });
         }
+      } else if (status === "archived") {
+        if (
+          matter.assignedLawyer &&
+          matter.status !== "completed" &&
+          matter.status !== "archived"
+        ) {
+          await User.findByIdAndUpdate(matter.assignedLawyer, {
+            $inc: { activeMatters: -1 },
+          });
+        }
+        matter.assignedLawyer = undefined;
       } else if (status === "unassigned") {
         // Remove assignment and reset stage when marked as unassigned
         if (matter.assignedLawyer) {

@@ -1,67 +1,114 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions, verifyLawyerApproved } from "@/lib/auth";
+import mongoose from "mongoose";
+import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
+import { getPlatformSettings } from "@/lib/platform";
 import Matter from "@/models/Matter";
 import User from "@/models/User";
-import mongoose from "mongoose";
 import { sendLawyerAssigned } from "@/lib/email";
+
+const PROGRESS_STAGES = [
+  "document_review","filing","negotiation","hearing","awaiting_judgment",
+];
+
+function hasRole(session: any, role: string): boolean {
+  const roles: string[] = session?.user?.roles ?? [session?.user?.role];
+  return roles.includes(role);
+}
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "lawyer") {
-    return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
-  }
-
-  if (!(await verifyLawyerApproved(session))) {
-    return NextResponse.json(
-      { error: "Account suspended or not approved." },
-      { status: 403 },
-    );
-  }
-
-  await connectDB();
-
-  const matter = await Matter.findById(params.id);
-  if (!matter) {
-    return NextResponse.json({ error: "Matter not found." }, { status: 404 });
-  }
-
-  if (matter.assignedLawyer || matter.status !== "unassigned") {
-    return NextResponse.json(
-      { error: "This matter has already been claimed by another lawyer." },
-      { status: 409 },
-    );
-  }
-
-  matter.assignedLawyer = new mongoose.Types.ObjectId(
-    session.user.id,
-  ) as unknown as typeof matter.assignedLawyer;
-  matter.status = "assigned";
-  matter.stage = "client_consultation";
-  await matter.save();
-
   try {
-    const lawyer = await User.findById(session.user.id)
-      .select("name specialisation")
-      .lean();
-    await sendLawyerAssigned({
-      clientName: `${matter.client.firstName} ${matter.client.lastName}`,
-      clientEmail: matter.client.email,
-      referenceNumber: matter.referenceNumber,
-      lawyerName: lawyer?.name ?? "Your lawyer",
-      lawyerSpecialisation: lawyer?.specialisation ?? "",
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+    }
+
+    // Must have lawyer role (or admin with lawyer role)
+    if (!hasRole(session, "lawyer")) {
+      return NextResponse.json(
+        { error: "Only lawyers can claim matters." },
+        { status: 401 }
+      );
+    }
+
+    await connectDB();
+
+    const settings   = await getPlatformSettings();
+    const MAX_ACTIVE = settings.maxMattersPerLawyer;
+    const lawyerId   = new mongoose.Types.ObjectId(session.user.id);
+
+    const activeMatters = await Matter.find({
+      assignedLawyer: lawyerId,
+      status: { $in: ["assigned","in_progress","under_review"] },
+    }).select("stage");
+
+    if (activeMatters.length >= MAX_ACTIVE) {
+      const hasProgress = activeMatters.some(m => PROGRESS_STAGES.includes(m.stage));
+      if (!hasProgress) {
+        return NextResponse.json(
+          {
+            error: `You have ${activeMatters.length} active matter${activeMatters.length !== 1 ? "s" : ""} with no meaningful progress. Please advance at least one to Document Review stage before accepting new ones.`,
+          },
+          { status: 403 }
+        );
+      }
+      return NextResponse.json(
+        {
+          error: `You already have ${MAX_ACTIVE} active matter${MAX_ACTIVE !== 1 ? "s" : ""}. Please complete or release one before accepting a new matter.`,
+        },
+        { status: 403 }
+      );
+    }
+
+    const updatedMatter = await Matter.findOneAndUpdate(
+      { _id: params.id, assignedLawyer: { $exists: false } },
+      {
+        $set: {
+          assignedLawyer: lawyerId,
+          status:         "assigned",
+          stage:          "client_consultation",
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedMatter) {
+      const exists = await Matter.exists({ _id: params.id });
+      if (!exists) return NextResponse.json({ error: "Matter not found." }, { status: 404 });
+      return NextResponse.json(
+        { error: "This matter has already been claimed by another lawyer." },
+        { status: 409 }
+      );
+    }
+
+    const lawyer = await User.findByIdAndUpdate(
+      session.user.id,
+      { $inc: { activeMatters: 1 } },
+      { new: true }
+    ).select("name specialisation").lean();
+
+    try {
+      await sendLawyerAssigned({
+        clientName:           `${updatedMatter.client.firstName} ${updatedMatter.client.lastName}`,
+        clientEmail:          updatedMatter.client.email,
+        referenceNumber:      updatedMatter.referenceNumber,
+        lawyerName:           lawyer?.name ?? "Your lawyer",
+        lawyerSpecialisation: lawyer?.specialisation ?? "",
+      });
+    } catch (err) {
+      console.error("[CLAIM email]", err);
+    }
+
+    return NextResponse.json({
+      message:         "Matter claimed successfully.",
+      referenceNumber: updatedMatter.referenceNumber,
     });
   } catch (err) {
-    console.error("[EMAIL]", err);
+    console.error("[MATTER CLAIM]", err);
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
-
-  await User.findByIdAndUpdate(session.user.id, {
-    $inc: { activeMatters: 1 },
-  });
-
-  return NextResponse.json({ message: "Matter claimed successfully." });
 }

@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import RoleSwitcher from "@/components/shared/RoleSwitcher";
 import {
   Loader2, CheckCircle, AlertCircle,
   User, Lock, Settings, Eye, EyeOff,
+  Scale
 } from "lucide-react";
 
-type Tab = "profile" | "password" | "platform";
+type Tab = "roles" | "profile" | "password" | "platform";
 
 interface PlatformSettings {
   maxMattersPerLawyer: number;
@@ -130,6 +132,7 @@ export default function AdminSettingsPage() {
   }
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
+    { key: "roles", label: "My roles", icon: <Scale className="w-4 h-4" /> },
     { key: "profile",  label: "Profile",           icon: <User className="w-4 h-4" />     },
     { key: "password", label: "Change password",   icon: <Lock className="w-4 h-4" />     },
     { key: "platform", label: "Platform settings", icon: <Settings className="w-4 h-4" /> },
@@ -147,15 +150,35 @@ export default function AdminSettingsPage() {
       {/* Tab nav */}
       <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
         {tabs.map(({ key, label, icon }) => (
-          <button key={key} onClick={() => setTab(key)}
-            className={"flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all " +
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={
+              "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all " +
               (tab === key
                 ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300")}>
-            {icon}{label}
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300")
+            }
+          >
+            {icon}
+            {label}
           </button>
         ))}
       </div>
+
+      {/* my roles */}
+      {tab === "roles" && (
+        <div className="card">
+          <h2 className="text-base font-medium text-gray-900 dark:text-gray-100 mb-2">
+            Role management
+          </h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
+            As an admin you can also hold a lawyer role, giving you access to
+            the lawyer portal to claim and work matters directly.
+          </p>
+          <RoleSwitcher />
+        </div>
+      )}
 
       {/* Profile */}
       {tab === "profile" && (
@@ -166,23 +189,38 @@ export default function AdminSettingsPage() {
           <form onSubmit={handleProfileSave} className="space-y-4">
             <div>
               <label className="label">Display name</label>
-              <input className="input" value={name}
-                onChange={(e) => setName(e.target.value)} required />
+              <input
+                className="input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
             </div>
             <div>
               <label className="label">Email address</label>
-              <input className="input bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
-                value={session?.user?.email ?? ""} disabled />
+              <input
+                className="input bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
+                value={session?.user?.email ?? ""}
+                disabled
+              />
               <p className="text-xs text-gray-400 mt-1">
-                To change your admin email, update the ADMIN_EMAILS environment variable.
+                To change your admin email, update the ADMIN_EMAILS environment
+                variable.
               </p>
             </div>
             <Feedback msg={profileMsg} />
-            <button type="submit" disabled={profileLoading}
-              className="btn btn-primary w-full justify-center py-2.5">
-              {profileLoading
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
-                : "Save changes"}
+            <button
+              type="submit"
+              disabled={profileLoading}
+              className="btn btn-primary w-full justify-center py-2.5"
+            >
+              {profileLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Saving…
+                </>
+              ) : (
+                "Save changes"
+              )}
             </button>
           </form>
         </div>
@@ -198,45 +236,88 @@ export default function AdminSettingsPage() {
             <div>
               <label className="label">Current password</label>
               <div className="relative">
-                <input type={showCurrent ? "text" : "password"} className="input pr-10"
+                <input
+                  type={showCurrent ? "text" : "password"}
+                  className="input pr-10"
                   value={passwords.currentPassword}
-                  onChange={(e) => setPasswords(p => ({ ...p, currentPassword: e.target.value }))}
-                  required />
-                <button type="button" tabIndex={-1}
-                  onClick={() => setShowCurrent(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                  {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  onChange={(e) =>
+                    setPasswords((p) => ({
+                      ...p,
+                      currentPassword: e.target.value,
+                    }))
+                  }
+                  required
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowCurrent((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showCurrent ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>
             <div>
               <label className="label">New password</label>
               <div className="relative">
-                <input type={showNew ? "text" : "password"} className="input pr-10"
+                <input
+                  type={showNew ? "text" : "password"}
+                  className="input pr-10"
                   placeholder="Min. 8 characters"
                   value={passwords.newPassword}
-                  onChange={(e) => setPasswords(p => ({ ...p, newPassword: e.target.value }))}
-                  required />
-                <button type="button" tabIndex={-1}
-                  onClick={() => setShowNew(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                  {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  onChange={(e) =>
+                    setPasswords((p) => ({ ...p, newPassword: e.target.value }))
+                  }
+                  required
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowNew((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showNew ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>
             <div>
               <label className="label">Confirm new password</label>
-              <input type="password" className="input" placeholder="Repeat new password"
+              <input
+                type="password"
+                className="input"
+                placeholder="Repeat new password"
                 value={passwords.confirmPassword}
-                onChange={(e) => setPasswords(p => ({ ...p, confirmPassword: e.target.value }))}
-                required />
+                onChange={(e) =>
+                  setPasswords((p) => ({
+                    ...p,
+                    confirmPassword: e.target.value,
+                  }))
+                }
+                required
+              />
             </div>
             <Feedback msg={passwordMsg} />
-            <button type="submit" disabled={passwordLoading}
-              className="btn btn-primary w-full justify-center py-2.5">
-              {passwordLoading
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Updating…</>
-                : "Update password"}
+            <button
+              type="submit"
+              disabled={passwordLoading}
+              className="btn btn-primary w-full justify-center py-2.5"
+            >
+              {passwordLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Updating…
+                </>
+              ) : (
+                "Update password"
+              )}
             </button>
           </form>
         </div>
@@ -249,10 +330,10 @@ export default function AdminSettingsPage() {
             Platform settings
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
-            These values control platform behaviour. Changes take effect on the next cron run.
+            These values control platform behaviour. Changes take effect on the
+            next cron run.
           </p>
           <form onSubmit={handlePlatformSave} className="space-y-5">
-
             <div className="border-b border-gray-100 dark:border-gray-800 pb-5">
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
                 Matter limits
@@ -260,31 +341,82 @@ export default function AdminSettingsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="label">Max matters per lawyer</label>
-                  <input type="number" className="input" min={1} max={10}
+                  <input
+                    type="number"
+                    className="input"
+                    min={1}
+                    max={10}
                     value={platform.maxMattersPerLawyer}
-                    onChange={(e) => setPlatform(p => ({ ...p, maxMattersPerLawyer: +e.target.value }))} />
-                  <p className="text-xs text-gray-400 mt-1">Currently {platform.maxMattersPerLawyer}</p>
+                    onChange={(e) =>
+                      setPlatform((p) => ({
+                        ...p,
+                        maxMattersPerLawyer: +e.target.value,
+                      }))
+                    }
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Currently {platform.maxMattersPerLawyer}
+                  </p>
                 </div>
                 <div>
                   <label className="label">Stale matter threshold (days)</label>
-                  <input type="number" className="input" min={1} max={30}
+                  <input
+                    type="number"
+                    className="input"
+                    min={1}
+                    max={30}
                     value={platform.staleMatterDays}
-                    onChange={(e) => setPlatform(p => ({ ...p, staleMatterDays: +e.target.value }))} />
-                  <p className="text-xs text-gray-400 mt-1">Auto-release after {platform.staleMatterDays} days inactive</p>
+                    onChange={(e) =>
+                      setPlatform((p) => ({
+                        ...p,
+                        staleMatterDays: +e.target.value,
+                      }))
+                    }
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Auto-release after {platform.staleMatterDays} days inactive
+                  </p>
                 </div>
                 <div>
                   <label className="label">Stale reminder (days)</label>
-                  <input type="number" className="input" min={1} max={29}
+                  <input
+                    type="number"
+                    className="input"
+                    min={1}
+                    max={29}
                     value={platform.reminderDays}
-                    onChange={(e) => setPlatform(p => ({ ...p, reminderDays: +e.target.value }))} />
-                  <p className="text-xs text-gray-400 mt-1">Warn lawyer at day {platform.reminderDays}</p>
+                    onChange={(e) =>
+                      setPlatform((p) => ({
+                        ...p,
+                        reminderDays: +e.target.value,
+                      }))
+                    }
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Warn lawyer at day {platform.reminderDays}
+                  </p>
                 </div>
                 <div>
-                  <label className="label">Email verification suspension (days)</label>
-                  <input type="number" className="input" min={7} max={60}
+                  <label className="label">
+                    Email verification suspension (days)
+                  </label>
+                  <input
+                    type="number"
+                    className="input"
+                    min={7}
+                    max={60}
                     value={platform.suspensionDays}
-                    onChange={(e) => setPlatform(p => ({ ...p, suspensionDays: +e.target.value }))} />
-                  <p className="text-xs text-gray-400 mt-1">Suspend unverified accounts after {platform.suspensionDays} days</p>
+                    onChange={(e) =>
+                      setPlatform((p) => ({
+                        ...p,
+                        suspensionDays: +e.target.value,
+                      }))
+                    }
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Suspend unverified accounts after {platform.suspensionDays}{" "}
+                    days
+                  </p>
                 </div>
               </div>
             </div>
@@ -296,24 +428,48 @@ export default function AdminSettingsPage() {
               <div className="space-y-4">
                 <div>
                   <label className="label">Platform name</label>
-                  <input className="input" value={platform.platformName}
-                    onChange={(e) => setPlatform(p => ({ ...p, platformName: e.target.value }))} />
+                  <input
+                    className="input"
+                    value={platform.platformName}
+                    onChange={(e) =>
+                      setPlatform((p) => ({
+                        ...p,
+                        platformName: e.target.value,
+                      }))
+                    }
+                  />
                 </div>
                 <div>
                   <label className="label">Support email</label>
-                  <input type="email" className="input" value={platform.supportEmail}
-                    onChange={(e) => setPlatform(p => ({ ...p, supportEmail: e.target.value }))} />
+                  <input
+                    type="email"
+                    className="input"
+                    value={platform.supportEmail}
+                    onChange={(e) =>
+                      setPlatform((p) => ({
+                        ...p,
+                        supportEmail: e.target.value,
+                      }))
+                    }
+                  />
                 </div>
               </div>
             </div>
 
             <Feedback msg={platformMsg} />
 
-            <button type="submit" disabled={platformLoading}
-              className="btn btn-primary w-full justify-center py-2.5">
-              {platformLoading
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
-                : "Save platform settings"}
+            <button
+              type="submit"
+              disabled={platformLoading}
+              className="btn btn-primary w-full justify-center py-2.5"
+            >
+              {platformLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Saving…
+                </>
+              ) : (
+                "Save platform settings"
+              )}
             </button>
           </form>
         </div>
