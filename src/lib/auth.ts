@@ -119,3 +119,32 @@ export const authOptions: NextAuthOptions = {
     },
   },
 };
+
+export async function verifyLawyerApproved(session: any) {
+  if (!session?.user) {
+    return { error: "Unauthorized", status: 401 };
+  }
+
+  await connectDB();
+  const dbUser = await User.findById((session.user as any).id);
+
+  if (!dbUser) {
+    return { error: "User not found", status: 404 };
+  }
+
+  const isLawyer =
+    dbUser.role === "lawyer" ||
+    (dbUser.roles && dbUser.roles.includes("lawyer"));
+  const isAdmin =
+    dbUser.role === "admin" || (dbUser.roles && dbUser.roles.includes("admin"));
+
+  if (!isLawyer && !isAdmin) {
+    return { error: "Access denied", status: 403 };
+  }
+
+  if (!dbUser.isApproved && !isAdmin) {
+    return { error: "Account pending approval", status: 403 };
+  }
+
+  return { user: dbUser };
+}
