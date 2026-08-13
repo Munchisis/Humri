@@ -22,7 +22,7 @@ export const statusStyles: Record<string, string> = {
   in_progress:  "bg-purple-50 text-purple-800 border-purple-200",
   under_review: "bg-teal-50 text-teal-800 border-teal-200",
   completed:    "bg-green-50 text-green-800 border-green-200",
-  archived:     "bg-gray-50 text-gray-600 border-gray-200",
+  archived:     "bg-red-600 text-gray-100 border-gray-200",
 };
 
 export const statusLabels: Record<string, string> = {

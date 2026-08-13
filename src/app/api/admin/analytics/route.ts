@@ -13,54 +13,55 @@ export async function GET() {
 
   await connectDB();
 
-  const now      = new Date();
-  const day30ago = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const now = new Date();
   const day90ago = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
   const [
-    // Overall counts
+    // Overall counts (non-archived)
     totalMatters,
     completedMatters,
     activeMatters,
     unassignedMatters,
 
-    // By type
+    // Archive counts
+    archiveTotal,
+    archiveActive,
+    archiveInactive,
+
+    // Aggregations
     byType,
-
-    // By urgency
     byUrgency,
-
-    // By state
     byState,
-
-    // By status
     byStatus,
-
-    // Monthly trend (last 6 months)
     monthlyTrend,
-
-    // Resolution time (avg days from created to completed)
     resolutionTime,
 
     // Lawyer stats
     totalLawyers,
     approvedLawyers,
     pendingLawyers,
-
   ] = await Promise.all([
+    // Total all matters in database
     Matter.countDocuments(),
+
+    // Non-archived active/completed matters
     Matter.countDocuments({ status: "completed" }),
-    Matter.countDocuments({ status: { $in: ["assigned", "in_progress", "under_review"] } }),
+    Matter.countDocuments({
+      status: { $in: ["assigned", "in_progress", "under_review"] },
+    }),
     Matter.countDocuments({ status: "unassigned" }),
+
+    // Archived matters
+    Matter.countDocuments({ status: "archived" }),
+    Matter.countDocuments({ status: "archived", isArchived: true }), // or active archived logic
+    Matter.countDocuments({ status: "archived", isArchived: false }),
 
     Matter.aggregate([
       { $group: { _id: "$type", count: { $sum: 1 } } },
       { $sort: { count: -1 } },
     ]),
 
-    Matter.aggregate([
-      { $group: { _id: "$urgency", count: { $sum: 1 } } },
-    ]),
+    Matter.aggregate([{ $group: { _id: "$urgency", count: { $sum: 1 } } }]),
 
     Matter.aggregate([
       { $match: { "client.state": { $exists: true, $ne: "" } } },
@@ -69,9 +70,7 @@ export async function GET() {
       { $limit: 10 },
     ]),
 
-    Matter.aggregate([
-      { $group: { _id: "$status", count: { $sum: 1 } } },
-    ]),
+    Matter.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
 
     Matter.aggregate([
       {
@@ -82,11 +81,13 @@ export async function GET() {
       {
         $group: {
           _id: {
-            year:  { $year:  "$createdAt" },
+            year: { $year: "$createdAt" },
             month: { $month: "$createdAt" },
           },
-          submitted:  { $sum: 1 },
-          completed:  { $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] } },
+          submitted: { $sum: 1 },
+          completed: {
+            $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
+          },
         },
       },
       { $sort: { "_id.year": 1, "_id.month": 1 } },
@@ -106,7 +107,7 @@ export async function GET() {
       },
       {
         $group: {
-          _id:     null,
+          _id: null,
           avgDays: { $avg: "$daysToResolve" },
           minDays: { $min: "$daysToResolve" },
           maxDays: { $max: "$daysToResolve" },
@@ -120,45 +121,80 @@ export async function GET() {
   ]);
 
   // Format monthly trend with month names
-  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const formattedTrend = monthlyTrend.map((m: { _id: { month: number; year: number }; submitted: number; completed: number }) => ({
-    month:     `${MONTHS[m._id.month - 1]} ${m._id.year}`,
-    submitted: m.submitted,
-    completed: m.completed,
-  }));
+  const MONTHS = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const formattedTrend = monthlyTrend.map(
+    (m: {
+      _id: { month: number; year: number };
+      submitted: number;
+      completed: number;
+    }) => ({
+      month: `${MONTHS[m._id.month - 1]} ${m._id.year}`,
+      submitted: m.submitted,
+      completed: m.completed,
+    }),
+  );
 
   // Format type labels
   const TYPE_LABELS: Record<string, string> = {
-    employment:    "Employment",
-    tenancy:       "Tenancy",
-    family_law:    "Family Law",
-    criminal:      "Criminal",
+    employment: "Employment",
+    tenancy: "Tenancy",
+    family_law: "Family Law",
+    criminal: "Criminal",
     land_property: "Land & Property",
-    contract:      "Contract",
-    human_rights:  "Human Rights",
-    debt:          "Debt",
-    immigration:   "Immigration",
-    other:         "Other",
+    contract: "Contract",
+    human_rights: "Human Rights",
+    debt: "Debt",
+    immigration: "Immigration",
+    other: "Other",
   };
 
   const formattedByType = byType.map((t: { _id: string; count: number }) => ({
     label: TYPE_LABELS[t._id] ?? t._id,
     count: t.count,
-    pct:   totalMatters ? Math.round((t.count / totalMatters) * 100) : 0,
+    pct: totalMatters ? Math.round((t.count / totalMatters) * 100) : 0,
   }));
 
   return NextResponse.json({
     overview: {
-      total:       totalMatters,
-      completed:   completedMatters,
-      active:      activeMatters,
-      unassigned:  unassignedMatters,
-      completionRate: totalMatters ? Math.round((completedMatters / totalMatters) * 100) : 0,
+      total: totalMatters,
+      completed: completedMatters,
+      active: activeMatters,
+      unassigned: unassignedMatters,
+      completionRate: totalMatters
+        ? Math.round((completedMatters / totalMatters) * 100)
+        : 0,
     },
-    byType:       formattedByType,
-    byUrgency:    byUrgency.map((u: { _id: string; count: number }) => ({ label: u._id, count: u.count })),
-    byState:      byState.map((s: { _id: string; count: number }) => ({ state: s._id, count: s.count })),
-    byStatus:     byStatus.map((s: { _id: string; count: number }) => ({ status: s._id, count: s.count })),
+    archive: {
+      total: archiveTotal,
+      active: archiveActive,
+      inactive: archiveInactive,
+    },
+    byType: formattedByType,
+    byUrgency: byUrgency.map((u: { _id: string; count: number }) => ({
+      label: u._id,
+      count: u.count,
+    })),
+    byState: byState.map((s: { _id: string; count: number }) => ({
+      state: s._id,
+      count: s.count,
+    })),
+    byStatus: byStatus.map((s: { _id: string; count: number }) => ({
+      status: s._id,
+      count: s.count,
+    })),
     monthlyTrend: formattedTrend,
     resolution: resolutionTime[0]
       ? {
@@ -167,6 +203,10 @@ export async function GET() {
           max: Math.round(resolutionTime[0].maxDays),
         }
       : null,
-    lawyers: { total: totalLawyers, approved: approvedLawyers, pending: pendingLawyers },
+    lawyers: {
+      total: totalLawyers,
+      approved: approvedLawyers,
+      pending: pendingLawyers,
+    },
   });
 }
