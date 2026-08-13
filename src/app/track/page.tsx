@@ -100,7 +100,7 @@ function TrackForm() {
       <nav className="border-b border-gray-100 bg-white dark:bg-gray-800 dark:border-none">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-10 h-10 dark:shadow-sm dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 dark:shadow-inner dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0">
               <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
             </div>
             <span className="text-sm font-semibold text-gray-900 dark:text-gray-200">

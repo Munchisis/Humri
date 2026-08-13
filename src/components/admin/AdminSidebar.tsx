@@ -57,7 +57,7 @@ export function AdminSidebar({ user }: Props) {
       <div className="flex items-center gap-3 px-5 py-5 border-b border-brand-800 shadow-lg">
         <Link
           href="/"
-          className="w-10 h-10 dark:shadow-sm dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0"
+          className="w-10 h-10 dark:shadow-inner dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0"
         >
           <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
         </Link>
