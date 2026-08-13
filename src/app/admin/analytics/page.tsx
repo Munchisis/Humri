@@ -9,6 +9,9 @@ import {
   FileText,
   RefreshCw,
   AlertCircle,
+  Star,
+  ShieldAlert,
+  Activity,
 } from "lucide-react";
 
 interface Analytics {
@@ -26,6 +29,12 @@ interface Analytics {
   resolution: { avg: number; min: number; max: number } | null;
   lawyers: { total: number; approved: number; pending: number };
   archive: { total: number; active: number; inactive: number };
+
+  // Extended Insights
+  workload: { _id: string; name: string; email: string; activeCases: number }[];
+  urgencyPriority: { _id: string; unassigned: number; total: number }[];
+  activeInLast14Days: number;
+  satisfaction: { avgRating: number; count: number } | null;
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -77,13 +86,17 @@ export default function AnalyticsPage() {
       </div>
     );
 
-  // Max value for bar charts
+  // Max value calculations for bar charts
   const maxType = Math.max(...data.byType.map((t) => t.count), 1);
   const maxState = Math.max(...data.byState.map((s) => s.count), 1);
   const maxTrend = Math.max(...data.monthlyTrend.map((m) => m.submitted), 1);
+  const maxWorkload = Math.max(
+    ...(data.workload?.map((w) => w.activeCases) ?? [1]),
+    1,
+  );
 
   return (
-    <div>
+    <div className="pb-10">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-medium">Analytics</h1>
@@ -96,49 +109,49 @@ export default function AnalyticsPage() {
         </button>
       </div>
 
-      {/* Overview stat cards - Updated Grid & added Unassigned matters */}
+      {/* Overview Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
         {[
           {
             label: "Total matters",
             value: data.overview.total,
             icon: FileText,
-            color: "text-blue-600",
+            color: "text-blue-600 dark:text-blue-400",
             bg: "bg-blue-50 dark:bg-blue-900/20",
           },
           {
             label: "Archived matters",
             value: data.archive?.total ?? 0,
             icon: FileText,
-            color: "text-red-600",
-            bg: "bg-red-50 dark:bg-gray-900/20",
+            color: "text-red-600 dark:text-red-400",
+            bg: "bg-red-50 dark:bg-red-900/20 ",
           },
           {
             label: "Unassigned matters",
             value: data.overview.unassigned,
             icon: AlertCircle,
-            color: "text-amber-600",
+            color: "text-amber-600 dark:text-amber-400",
             bg: "bg-amber-50 dark:bg-amber-900/20",
           },
           {
             label: "Completion rate",
             value: `${data.overview.completionRate}%`,
             icon: TrendingUp,
-            color: "text-green-600",
+            color: "text-green-600 dark:text-green-400",
             bg: "bg-green-50 dark:bg-green-900/20",
           },
           {
             label: "Avg resolution",
             value: data.resolution ? `${data.resolution.avg}d` : "—",
             icon: Clock,
-            color: "text-purple-600",
+            color: "text-purple-600 dark:text-purple-400",
             bg: "bg-purple-50 dark:bg-purple-900/20",
           },
           {
             label: "Active lawyers",
             value: data.lawyers.approved,
             icon: Users,
-            color: "text-teal-600",
+            color: "text-teal-600 dark:text-teal-400",
             bg: "bg-teal-50 dark:bg-teal-900/20",
           },
         ].map(({ label, value, icon: Icon, color, bg }) => (
@@ -156,12 +169,13 @@ export default function AnalyticsPage() {
         ))}
       </div>
 
+      {/* Primary Visualizations */}
       <div className="grid lg:grid-cols-2 gap-5 mb-5">
-        {/* Monthly trend */}
+        {/* Monthly Trend */}
         <div className="card lg:col-span-2">
           <h2 className="text-base font-medium mb-1">Monthly activity</h2>
           <p className="text-xs text-gray-400 mb-5">
-            Matters submitted vs completed over the last 3 months
+            Matters submitted vs completed over recent months
           </p>
           {data.monthlyTrend.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-8">
@@ -213,21 +227,11 @@ export default function AnalyticsPage() {
                   </div>
                 </div>
               ))}
-              <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
-                <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                  <div className="w-3 h-2 rounded-full bg-brand-400" />{" "}
-                  Submitted
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                  <div className="w-3 h-2 rounded-full bg-green-500" />{" "}
-                  Completed
-                </div>
-              </div>
             </div>
           )}
         </div>
 
-        {/* By matter type */}
+        {/* Matters by Type */}
         <div className="card">
           <h2 className="text-base font-medium mb-1">Matters by type</h2>
           <p className="text-xs text-gray-400 mb-5">
@@ -260,7 +264,7 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* By state */}
+        {/* Top States */}
         <div className="card">
           <h2 className="text-base font-medium mb-1">Top 10 states</h2>
           <p className="text-xs text-gray-400 mb-5">
@@ -295,8 +299,90 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
+      {/* NEW INSIGHTS SECTION */}
+      <div className="grid lg:grid-cols-2 gap-5 mb-5">
+        {/* Top Lawyer Workloads */}
+        <div className="card">
+          <h2 className="text-base font-medium mb-1">
+            Lawyer Workload (Active Cases)
+          </h2>
+          <p className="text-xs text-gray-400 mb-5">
+            Lawyers managing the highest caseloads
+          </p>
+          {data.workload && data.workload.length > 0 ? (
+            <div className="space-y-3">
+              {data.workload.map((w) => (
+                <div key={w._id}>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-gray-700 dark:text-gray-300 font-medium">
+                      {w.name}
+                    </span>
+                    <span className="text-gray-400">{w.activeCases} cases</span>
+                  </div>
+                  <div className="bg-gray-100 dark:bg-gray-800 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="h-2 rounded-full bg-teal-500 transition-all"
+                      style={{
+                        width: `${Math.round((w.activeCases / maxWorkload) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 text-center py-6">
+              No active lawyer assignments.
+            </p>
+          )}
+        </div>
+
+        {/* Priority & Urgent Action Needs */}
+        <div className="card">
+          <h2 className="text-base font-medium mb-1">High-Priority Cases</h2>
+          <p className="text-xs text-gray-400 mb-5">
+            Urgent & Critical matters needing immediate attention
+          </p>
+          {data.urgencyPriority && data.urgencyPriority.length > 0 ? (
+            <div className="space-y-4">
+              {data.urgencyPriority.map((item) => (
+                <div
+                  key={item._id}
+                  className="p-3 bg-amber-50/50 dark:bg-amber-900/10 rounded-lg border border-amber-100 dark:border-amber-900/20 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
+                    <div>
+                      <div className="text-sm font-medium capitalize text-gray-800 dark:text-gray-200">
+                        {item._id} Matters
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {item.total} total submitted
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-amber-600">
+                      {item.unassigned}
+                    </span>
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wider">
+                      Unassigned
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 text-center py-6">
+              No urgent or critical matters currently pending.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Operational Metrics Grid */}
       <div className="grid lg:grid-cols-3 gap-5">
-        {/* Urgency breakdown */}
+        {/* Urgency Breakdown */}
         <div className="card">
           <h2 className="text-base font-medium mb-5">By urgency</h2>
           <div className="space-y-4">
@@ -328,7 +414,7 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Resolution time */}
+        {/* Resolution Time & Health */}
         <div className="card">
           <h2 className="text-base font-medium mb-5">Resolution time</h2>
           {data.resolution ? (
@@ -362,19 +448,29 @@ export default function AnalyticsPage() {
                   </span>
                 </div>
               ))}
-              <div className="pt-3 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400">
-                Based on {data.overview.completed} completed matters
-              </div>
             </div>
           ) : (
-            <p className="text-sm text-gray-400">No completed matters yet.</p>
+            <p className="text-sm text-gray-400 py-4">
+              No completed matters yet.
+            </p>
           )}
+
+          {/* Platform Activity Metric */}
+          <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-emerald-500" />
+              <span className="text-xs text-gray-500">Updated in last 14d</span>
+            </div>
+            <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+              {data.activeInLast14Days ?? 0} active
+            </span>
+          </div>
         </div>
 
-        {/* Lawyer overview */}
+        {/* Lawyer & Satisfaction Overview */}
         <div className="card">
-          <h2 className="text-base font-medium mb-5">Lawyer overview</h2>
-          <div className="space-y-4">
+          <h2 className="text-base font-medium mb-5">Lawyer & Feedback</h2>
+          <div className="space-y-3">
             {[
               {
                 label: "Total registered",
@@ -392,35 +488,28 @@ export default function AnalyticsPage() {
                 color: "text-amber-600",
               },
             ].map(({ label, value, color }) => (
-              <div key={label} className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">
+              <div
+                key={label}
+                className="flex items-center justify-between text-sm"
+              >
+                <span className="text-gray-600 dark:text-gray-400">
                   {label}
                 </span>
-                <span className={`text-xl font-semibold ${color}`}>
-                  {value}
-                </span>
+                <span className={`font-semibold ${color}`}>{value}</span>
               </div>
             ))}
-            <div className="pt-3 border-t border-gray-100 dark:border-gray-800">
-              <div className="flex items-center justify-between text-xs text-gray-400 mb-1.5">
-                <span>Approval rate</span>
-                <span>
-                  {data.lawyers.total
-                    ? Math.round(
-                        (data.lawyers.approved / data.lawyers.total) * 100,
-                      )
-                    : 0}
-                  %
-                </span>
+
+            {/* Client CSAT Score */}
+            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />{" "}
+                Client CSAT
               </div>
-              <div className="bg-gray-100 dark:bg-gray-800 rounded-full h-2 overflow-hidden">
-                <div
-                  className="h-2 rounded-full bg-green-500 transition-all"
-                  style={{
-                    width: `${data.lawyers.total ? Math.round((data.lawyers.approved / data.lawyers.total) * 100) : 0}%`,
-                  }}
-                />
-              </div>
+              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                {data.satisfaction
+                  ? `${data.satisfaction.avgRating} / 5`
+                  : "No ratings"}
+              </span>
             </div>
           </div>
         </div>

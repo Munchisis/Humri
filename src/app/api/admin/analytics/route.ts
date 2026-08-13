@@ -14,10 +14,11 @@ export async function GET() {
   await connectDB();
 
   const now = new Date();
+  const day14ago = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
   const day90ago = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
   const [
-    // Overall counts (non-archived)
+    // Overall counts
     totalMatters,
     completedMatters,
     activeMatters,
@@ -40,11 +41,17 @@ export async function GET() {
     totalLawyers,
     approvedLawyers,
     pendingLawyers,
+
+    // Recommended Metrics
+    topLawyerWorkload,
+    urgencyVsStatus,
+    recentActivityCount,
+    satisfactionStats,
   ] = await Promise.all([
-    // Total all matters in database
+    // Total matters in database
     Matter.countDocuments(),
 
-    // Non-archived active/completed matters
+    // Status counts
     Matter.countDocuments({ status: "completed" }),
     Matter.countDocuments({
       status: { $in: ["assigned", "in_progress", "under_review"] },
@@ -53,16 +60,19 @@ export async function GET() {
 
     // Archived matters
     Matter.countDocuments({ status: "archived" }),
-    Matter.countDocuments({ status: "archived", isArchived: true }), // or active archived logic
+    Matter.countDocuments({ status: "archived", isArchived: true }),
     Matter.countDocuments({ status: "archived", isArchived: false }),
 
+    // Breakdown by type
     Matter.aggregate([
       { $group: { _id: "$type", count: { $sum: 1 } } },
       { $sort: { count: -1 } },
     ]),
 
+    // Breakdown by urgency
     Matter.aggregate([{ $group: { _id: "$urgency", count: { $sum: 1 } } }]),
 
+    // Client states
     Matter.aggregate([
       { $match: { "client.state": { $exists: true, $ne: "" } } },
       { $group: { _id: "$client.state", count: { $sum: 1 } } },
@@ -70,8 +80,10 @@ export async function GET() {
       { $limit: 10 },
     ]),
 
+    // Breakdown by status
     Matter.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
 
+    // 90 days trend
     Matter.aggregate([
       {
         $match: {
@@ -93,6 +105,7 @@ export async function GET() {
       { $sort: { "_id.year": 1, "_id.month": 1 } },
     ]),
 
+    // Average resolution time
     Matter.aggregate([
       { $match: { status: "completed" } },
       {
@@ -115,9 +128,72 @@ export async function GET() {
       },
     ]),
 
+    // Lawyer counts
     User.countDocuments({ role: "lawyer" }),
     User.countDocuments({ role: "lawyer", isApproved: true }),
     User.countDocuments({ role: "lawyer", isApproved: false }),
+
+    // 1. Top 5 lawyer workloads (Active cases)
+    Matter.aggregate([
+      {
+        $match: {
+          status: { $in: ["assigned", "in_progress", "under_review"] },
+          assignedTo: { $ne: null },
+        },
+      },
+      { $group: { _id: "$assignedTo", activeCases: { $sum: 1 } } },
+      { $sort: { activeCases: -1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "lawyer",
+        },
+      },
+      { $unwind: "$lawyer" },
+      {
+        $project: {
+          _id: 1,
+          name: "$lawyer.name",
+          email: "$lawyer.email",
+          activeCases: 1,
+        },
+      },
+    ]),
+
+    // 2. Critical/Urgent matters that are unassigned
+    Matter.aggregate([
+      { $match: { urgency: { $in: ["urgent", "critical"] } } },
+      {
+        $group: {
+          _id: "$urgency",
+          unassigned: {
+            $sum: { $cond: [{ $eq: ["$status", "unassigned"] }, 1, 0] },
+          },
+          total: { $sum: 1 },
+        },
+      },
+    ]),
+
+    // 3. Recently updated matters (Last 14 days activity rate)
+    Matter.countDocuments({
+      status: { $in: ["assigned", "in_progress", "under_review"] },
+      updatedAt: { $gte: day14ago },
+    }),
+
+    // 4. Client satisfaction ratings (if rating field exists)
+    Matter.aggregate([
+      { $match: { rating: { $exists: true, $ne: null } } },
+      {
+        $group: {
+          _id: null,
+          avgRating: { $avg: "$rating" },
+          totalRatings: { $sum: 1 },
+        },
+      },
+    ]),
   ]);
 
   // Format monthly trend with month names
@@ -208,5 +284,16 @@ export async function GET() {
       approved: approvedLawyers,
       pending: pendingLawyers,
     },
+
+    // Extended Insights
+    workload: topLawyerWorkload,
+    urgencyPriority: urgencyVsStatus,
+    activeInLast14Days: recentActivityCount,
+    satisfaction: satisfactionStats[0]
+      ? {
+          avgRating: Number(satisfactionStats[0].avgRating.toFixed(1)),
+          count: satisfactionStats[0].totalRatings,
+        }
+      : null,
   });
 }
