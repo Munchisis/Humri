@@ -6,59 +6,69 @@ import { connectDB } from "@/lib/db";
 import Message from "@/models/Message";
 import { Resend } from "resend";
 
-const resend  = new Resend(process.env.RESEND_API_KEY);
-const FROM    = process.env.EMAIL_FROM ?? "HUMRI <onboarding@resend.dev>";
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM = process.env.EMAIL_FROM ?? "HUMRI <onboarding@resend.dev>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
-const ReplySchema = z.object({
-  reply:  z.string().min(5, "Reply must be at least 5 characters").max(2000),
-  status: z.enum(["read", "resolved"]).optional(),
-});
+const ReplySchema = z
+  .object({
+    reply: z
+      .string()
+      .min(5, "Reply must be at least 5 characters")
+      .max(2000)
+      .optional(),
+    status: z.enum(["read", "resolved"]).optional(),
+  })
+  .refine((data) => data.reply !== undefined || data.status !== undefined, {
+    message: "At least one of 'reply' or 'status' must be provided.",
+  });
 
 // ─── PATCH — admin marks read, replies, or resolves ──────────────────────────
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
+
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "admin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body   = await req.json();
+  const body = await req.json();
   const parsed = ReplySchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.errors[0].message },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   await connectDB();
 
-  const message = await Message.findById(params.id);
+  const message = await Message.findById(id);
   if (!message) {
     return NextResponse.json({ error: "Message not found." }, { status: 404 });
   }
 
-  // Update status
+  // Update status if provided
   if (parsed.data.status) {
     message.status = parsed.data.status;
   }
 
-  // Save reply
+  // Save reply and send email if provided
   if (parsed.data.reply) {
     message.adminReply = parsed.data.reply;
-    message.repliedAt  = new Date();
-    message.repliedBy  = session.user.id as unknown as typeof message.repliedBy;
-    message.status     = "resolved";
+    message.repliedAt = new Date();
+    message.repliedBy = session.user.id as unknown as typeof message.repliedBy;
+    message.status = "resolved";
 
     // Email the reply to the lawyer
     try {
       await resend.emails.send({
-        from:    FROM,
-        to:      message.fromEmail,
+        from: FROM,
+        to: message.fromEmail,
         subject: `Re: ${message.subject}`,
         html: `
           <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
@@ -101,15 +111,21 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
+
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "admin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   await connectDB();
-  await Message.findByIdAndDelete(params.id);
+
+  const deletedMessage = await Message.findByIdAndDelete(id);
+  if (!deletedMessage) {
+    return NextResponse.json({ error: "Message not found." }, { status: 404 });
+  }
 
   return NextResponse.json({ message: "Message deleted." });
 }

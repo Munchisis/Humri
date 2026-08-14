@@ -9,10 +9,8 @@ const NoteSchema = z.object({
   content: z.string().min(3, "Note must be at least 3 characters").max(1000),
 });
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function POST(req: NextRequest,{ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
@@ -29,7 +27,7 @@ export async function POST(
 
   await connectDB();
 
-  const matter = await Matter.findById(params.id);
+  const matter = await Matter.findById(id);
   if (!matter) {
     return NextResponse.json({ error: "Matter not found." }, { status: 404 });
   }

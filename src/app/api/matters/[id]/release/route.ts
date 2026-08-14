@@ -24,8 +24,8 @@ const Schema = z.object({
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } },
-) {
+  { params }: { params: Promise<{ id: string }> }) {
+ const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "lawyer") {
@@ -51,7 +51,7 @@ export async function POST(
     const { reason } = parsed.data;
     await connectDB();
 
-    const matter = await Matter.findById(params.id);
+    const matter = await Matter.findById(id);
     if (!matter) {
       return NextResponse.json({ error: "Matter not found." }, { status: 404 });
     }
