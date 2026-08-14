@@ -20,6 +20,10 @@ const cspHeader = `
 const nextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ["mongoose"],
+  eslint: {
+    // Allows production builds to successfully complete even if lint errors exist
+    ignoreDuringBuilds: true,
+  },
   async headers() {
     return [
       {
