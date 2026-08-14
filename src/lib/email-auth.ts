@@ -20,6 +20,21 @@ function escapeHtml(input: string): string {
     .replace(/'/g, "&#39;");
 }
 
+// The Resend Node SDK does NOT throw on API-level errors (unverified
+// sender, invalid recipient, rate limits, etc.) — it resolves with
+// { data, error } either way. Every send goes through this helper so a
+// rejected send actually throws, which lets every call site's existing
+// try/catch blocks do their job.
+async function send(payload: Parameters<typeof resend.emails.send>[0]) {
+  const { data, error } = await resend.emails.send(payload);
+  if (error) {
+    throw new Error(
+      `Resend rejected the email (${error.name ?? "unknown"}): ${error.message ?? "no message"}`,
+    );
+  }
+  return data;
+}
+
 // ─── Password reset email ─────────────────────────────────────────────────────
 
 export async function sendPasswordReset({
@@ -32,8 +47,9 @@ export async function sendPasswordReset({
   token: string;
 }) {
   const resetUrl = `${APP_URL}/auth/reset-password?token=${token}`;
+  const safeName = escapeHtml(name);
 
-  await resend.emails.send({
+  await send({
     from: FROM,
     to: email,
     subject: "Reset your HUMRI password",
@@ -44,7 +60,7 @@ export async function sendPasswordReset({
           <p style="color:#9FE1CB;font-size:12px;margin:4px 0 0">Pro bono legal aid</p>
         </div>
         <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
-          <p style="margin:0 0 16px">Dear <strong>${name}</strong>,</p>
+          <p style="margin:0 0 16px">Dear <strong>${safeName}</strong>,</p>
           <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
             We received a request to reset your HUMRI account password. Click the button below to
             choose a new password. This link will expire in 1 hour.
@@ -78,8 +94,9 @@ export async function sendEmailVerification({
   token: string;
 }) {
   const verifyUrl = `${APP_URL}/auth/verify-email?token=${token}`;
+  const safeName = escapeHtml(name);
 
-  await resend.emails.send({
+  await send({
     from: FROM,
     to: email,
     subject: "Verify your HUMRI email address",
@@ -90,7 +107,7 @@ export async function sendEmailVerification({
           <p style="color:#9FE1CB;font-size:12px;margin:4px 0 0">Pro bono legal aid</p>
         </div>
         <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
-          <p style="margin:0 0 16px">Dear <strong>${name}</strong>,</p>
+          <p style="margin:0 0 16px">Dear <strong>${safeName}</strong>,</p>
           <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
             Thank you for applying to volunteer with HUMRI. Please verify your email address so we
             can reach you with matter notifications and updates.
@@ -113,6 +130,57 @@ export async function sendEmailVerification({
   });
 }
 
+// ─── New lawyer application (to admin) ────────────────────────────────────────
+export async function sendAdminNewLawyerApplication({
+  adminEmail,
+  lawyerName,
+  lawyerEmail,
+  barNumber,
+  specialisation,
+  state,
+}: {
+  adminEmail: string;
+  lawyerName: string;
+  lawyerEmail: string;
+  barNumber: string;
+  specialisation: string;
+  state: string;
+}) {
+  const safeName = escapeHtml(lawyerName);
+  const safeEmail = escapeHtml(lawyerEmail);
+  const safeBarNumber = escapeHtml(barNumber);
+  const safeSpecialisation = escapeHtml(specialisation);
+  const safeState = escapeHtml(state);
+
+  await send({
+    from: FROM,
+    to: adminEmail,
+    subject: `New lawyer application pending approval — ${safeName}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+        <div style="background:#085041;padding:24px 32px;border-radius:12px 12px 0 0">
+          <h1 style="color:#E1F5EE;font-size:20px;margin:0">HUMRI Admin</h1>
+          <p style="color:#9FE1CB;font-size:12px;margin:4px 0 0">New lawyer application</p>
+        </div>
+        <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
+          <p style="margin:0 0 16px">A new volunteer lawyer has applied and is awaiting approval.</p>
+          <table style="width:100%;border-collapse:collapse;margin:0 0 24px">
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;width:140px">Name</td><td style="padding:8px 0;font-weight:500">${safeName}</td></tr>
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Email</td><td style="padding:8px 0">${safeEmail}</td></tr>
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Bar / SCN</td><td style="padding:8px 0;font-family:monospace">${safeBarNumber}</td></tr>
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Specialisation</td><td style="padding:8px 0">${safeSpecialisation}</td></tr>
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">State</td><td style="padding:8px 0">${safeState}</td></tr>
+          </table>
+          <a href="${APP_URL}/admin/lawyers"
+            style="display:inline-block;background:#085041;color:#E1F5EE;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500;font-size:14px">
+            Review application →
+          </a>
+        </div>
+      </div>
+    `,
+  });
+}
+
 // ─── Lawyer support request (to admin) ────────────────────────────────────────
 
 export async function sendLawyerSupportRequest({
@@ -128,11 +196,16 @@ export async function sendLawyerSupportRequest({
   subject: string;
   message: string;
 }) {
-  await resend.emails.send({
+  const safeLawyerName = escapeHtml(lawyerName);
+  const safeLawyerEmail = escapeHtml(lawyerEmail);
+  const safeSubject = escapeHtml(subject);
+  const safeMessage = escapeHtml(message);
+
+  await send({
     from: FROM,
     to: adminEmail,
     replyTo: lawyerEmail,
-    subject: `[Support] ${subject}`,
+    subject: `[Support] ${safeSubject}`,
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
         <div style="background:#085041;padding:24px 32px;border-radius:12px 12px 0 0">
@@ -141,13 +214,13 @@ export async function sendLawyerSupportRequest({
         </div>
         <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
           <table style="width:100%;border-collapse:collapse;margin:0 0 20px">
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:13px;width:80px">From</td><td style="padding:6px 0;font-weight:500">${lawyerName}</td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Email</td><td style="padding:6px 0">${lawyerEmail}</td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Subject</td><td style="padding:6px 0;font-weight:500">${subject}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:13px;width:80px">From</td><td style="padding:6px 0;font-weight:500">${safeLawyerName}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Email</td><td style="padding:6px 0">${safeLawyerEmail}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Subject</td><td style="padding:6px 0;font-weight:500">${safeSubject}</td></tr>
           </table>
-          <div style="background:#F9FAFB;border:1px solid #e5e7eb;border-radius:8px;padding:16px;color:#374151;line-height:1.6;white-space:pre-wrap">${message}</div>
+          <div style="background:#F9FAFB;border:1px solid #e5e7eb;border-radius:8px;padding:16px;color:#374151;line-height:1.6;white-space:pre-wrap">${safeMessage}</div>
           <p style="margin:20px 0 0;font-size:12px;color:#9ca3af">
-            Reply directly to this email to respond to ${lawyerName}.
+            Reply directly to this email to respond to ${safeLawyerName}.
           </p>
         </div>
       </div>
@@ -166,7 +239,10 @@ export async function sendLawyerSupportConfirmation({
   lawyerEmail: string;
   subject: string;
 }) {
-  await resend.emails.send({
+  const safeLawyerName = escapeHtml(lawyerName);
+  const safeSubject = escapeHtml(subject);
+
+  await send({
     from: FROM,
     to: lawyerEmail,
     subject: "We received your message, HUMRI Support",
@@ -176,9 +252,9 @@ export async function sendLawyerSupportConfirmation({
           <h1 style="color:#E1F5EE;font-size:20px;margin:0">HUMRI</h1>
         </div>
         <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
-          <p style="margin:0 0 16px">Dear <strong>${lawyerName}</strong>,</p>
+          <p style="margin:0 0 16px">Dear <strong>${safeLawyerName}</strong>,</p>
           <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
-            We've received your message regarding "<strong>${subject}</strong>" and our admin team
+            We've received your message regarding "<strong>${safeSubject}</strong>" and our admin team
             will respond as soon as possible, usually within 1-2 business days.
           </p>
           <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0">
@@ -211,7 +287,7 @@ export async function sendContactFormNotification({
   const safeSubject = escapeHtml(subject);
   const safeMessage = escapeHtml(message);
 
-  await resend.emails.send({
+  await send({
     from: FROM,
     to: adminEmail,
     replyTo: email,
@@ -252,7 +328,7 @@ export async function sendContactFormConfirmation({
   const safeName = escapeHtml(name);
   const safeSubject = escapeHtml(subject);
 
-  await resend.emails.send({
+  await send({
     from: FROM,
     to: email,
     subject: "We received your message — HUMRI",

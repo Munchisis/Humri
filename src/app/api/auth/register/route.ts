@@ -3,7 +3,10 @@ import { z } from "zod";
 import crypto from "crypto";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
-import { sendEmailVerification } from "@/lib/email-auth";
+import {
+  sendEmailVerification,
+  sendAdminNewLawyerApplication,
+} from "@/lib/email-auth";
 
 const SPECIALISATIONS = [
   "Employment & Labour",
@@ -163,6 +166,28 @@ export async function POST(req: NextRequest) {
       await sendEmailVerification({ name, email, token: verifyToken });
     } catch (err) {
       console.error("[REGISTER] verification email failed:", err);
+      // don't fail registration if email fails
+    }
+
+    // Notify admins that a new lawyer application needs review — this was
+    // previously missing entirely, so applications sat pending with no one
+    // told they existed.
+    try {
+      const admins = await User.find({ role: "admin" }).select("email").lean();
+      await Promise.allSettled(
+        admins.map((a) =>
+          sendAdminNewLawyerApplication({
+            adminEmail: a.email,
+            lawyerName: name,
+            lawyerEmail: email,
+            barNumber,
+            specialisation,
+            state,
+          }),
+        ),
+      );
+    } catch (err) {
+      console.error("[REGISTER] admin notification failed:", err);
       // don't fail registration if email fails
     }
 

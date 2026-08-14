@@ -7,6 +7,19 @@ const APP_URL =
   process.env.NEXTAUTH_URL ??
   "http://localhost:3000";
 
+// Escapes values that came from user input before they're interpolated into
+// an HTML email template. Without this, a name/subject/message containing
+// "<img src=x onerror=...>" or a spoofed link renders as live HTML in the
+// recipient's inbox rather than as inert text.
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // The Resend Node SDK does NOT throw on API-level errors (unverified
 // sender, invalid recipient, rate limits, etc.) — it resolves with
 // { data, error } either way. Every send goes through this helper so a
@@ -34,6 +47,7 @@ export async function sendMatterSubmitted({
   referenceNumber: string;
   matterType: string;
 }) {
+  const safeName = escapeHtml(clientName);
   await send({
     from: FROM,
     to: clientEmail,
@@ -45,7 +59,7 @@ export async function sendMatterSubmitted({
           <p style="color:#9FE1CB;font-size:12px;margin:4px 0 0">Pro bono legal aid</p>
         </div>
         <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
-          <p style="margin:0 0 16px">Dear <strong>${clientName}</strong>,</p>
+          <p style="margin:0 0 16px">Dear <strong>${safeName}</strong>,</p>
           <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
             Thank you for submitting your legal matter to HumRi. We have received your submission
             and our team will review it shortly.
@@ -88,6 +102,9 @@ export async function sendLawyerAssigned({
   lawyerName: string;
   lawyerSpecialisation: string;
 }) {
+  const safeClientName = escapeHtml(clientName);
+  const safeLawyerName = escapeHtml(lawyerName);
+  const safeSpecialisation = escapeHtml(lawyerSpecialisation);
   await send({
     from: FROM,
     to: clientEmail,
@@ -99,15 +116,15 @@ export async function sendLawyerAssigned({
           <p style="color:#9FE1CB;font-size:12px;margin:4px 0 0">Pro bono legal aid</p>
         </div>
         <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
-          <p style="margin:0 0 16px">Dear <strong>${clientName}</strong>,</p>
+          <p style="margin:0 0 16px">Dear <strong>${safeClientName}</strong>,</p>
           <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
             Good news a volunteer lawyer has been assigned to your matter
             <strong>${referenceNumber}</strong> and will be in touch with you shortly.
           </p>
           <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:20px;margin:24px 0">
             <p style="margin:0 0 8px;font-size:12px;color:#15803D;text-transform:uppercase;letter-spacing:.05em">Your assigned lawyer</p>
-            <p style="margin:0;font-size:18px;font-weight:600;color:#085041">${lawyerName}</p>
-            <p style="margin:4px 0 0;font-size:13px;color:#6b7280">${lawyerSpecialisation}</p>
+            <p style="margin:0;font-size:18px;font-weight:600;color:#085041">${safeLawyerName}</p>
+            <p style="margin:4px 0 0;font-size:13px;color:#6b7280">${safeSpecialisation}</p>
           </div>
           <p style="margin:0 0 24px;color:#4b5563;line-height:1.6">
             Your lawyer will contact you directly to arrange a consultation.
@@ -139,6 +156,7 @@ export async function sendMatterStageUpdated({
   referenceNumber: string;
   stageLabel: string;
 }) {
+  const safeName = escapeHtml(clientName);
   await send({
     from: FROM,
     to: clientEmail,
@@ -150,7 +168,7 @@ export async function sendMatterStageUpdated({
           <p style="color:#9FE1CB;font-size:12px;margin:4px 0 0">Pro bono legal aid</p>
         </div>
         <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
-          <p style="margin:0 0 16px">Dear <strong>${clientName}</strong>,</p>
+          <p style="margin:0 0 16px">Dear <strong>${safeName}</strong>,</p>
           <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
             There's an update on your matter <strong>${referenceNumber}</strong>.
           </p>
@@ -187,6 +205,8 @@ export async function sendMatterCompleted({
   referenceNumber: string;
   lawyerName: string;
 }) {
+  const safeClientName = escapeHtml(clientName);
+  const safeLawyerName = escapeHtml(lawyerName);
   await send({
     from: FROM,
     to: clientEmail,
@@ -198,10 +218,10 @@ export async function sendMatterCompleted({
           <p style="color:#9FE1CB;font-size:12px;margin:4px 0 0">Pro bono legal aid</p>
         </div>
         <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
-          <p style="margin:0 0 16px">Dear <strong>${clientName}</strong>,</p>
+          <p style="margin:0 0 16px">Dear <strong>${safeClientName}</strong>,</p>
           <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
             Your legal matter <strong>${referenceNumber}</strong> has been marked as resolved
-            by <strong>${lawyerName}</strong>.
+            by <strong>${safeLawyerName}</strong>.
           </p>
           <p style="margin:0 0 24px;color:#4b5563;line-height:1.6">
             We hope HumRi was able to help you. If you have a new legal matter in the future,
@@ -235,6 +255,7 @@ export async function sendAdminNewMatter({
   matterType: string;
   urgency: string;
 }) {
+  const safeName = escapeHtml(clientName);
   await send({
     from: FROM,
     to: adminEmail,
@@ -248,7 +269,7 @@ export async function sendAdminNewMatter({
           <p style="margin:0 0 16px">A new matter has been submitted and requires assignment.</p>
           <table style="width:100%;border-collapse:collapse;margin:0 0 24px">
             <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;width:140px">Reference</td><td style="padding:8px 0;font-weight:500;font-family:monospace">${referenceNumber}</td></tr>
-            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Client</td><td style="padding:8px 0;font-weight:500">${clientName}</td></tr>
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Client</td><td style="padding:8px 0;font-weight:500">${safeName}</td></tr>
             <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Matter type</td><td style="padding:8px 0">${matterType}</td></tr>
             <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Urgency</td><td style="padding:8px 0;font-weight:500;color:${urgency === "critical" ? "#dc2626" : urgency === "urgent" ? "#d97706" : "#16a34a"}">${urgency.charAt(0).toUpperCase() + urgency.slice(1)}</td></tr>
           </table>
@@ -270,6 +291,7 @@ export async function sendLawyerApproved({
   lawyerName: string;
   lawyerEmail: string;
 }) {
+  const safeName = escapeHtml(lawyerName);
   await send({
     from: FROM,
     to: lawyerEmail,
@@ -282,7 +304,7 @@ export async function sendLawyerApproved({
         </div>
 
         <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
-          <p style="margin:0 0 16px">Dear <strong>${lawyerName}</strong>,</p>
+          <p style="margin:0 0 16px">Dear <strong>${safeName}</strong>,</p>
           <p style="margin-top:0 0 16px;color:#4b5563;line-height:1.6">
             Welcome to HUMRI. Your volunteer lawyer account has been approved and
             you can now sign in to browse and accept matters from clients.
@@ -339,6 +361,7 @@ export async function sendLawyerSuspended({
   lawyerName: string;
   lawyerEmail: string;
 }) {
+  const safeName = escapeHtml(lawyerName);
   await send({
     from: FROM,
     to: lawyerEmail,
@@ -350,7 +373,7 @@ export async function sendLawyerSuspended({
           <p style="color:#fecaca;font-size:12px;margin:4px 0 0">Account update</p>
         </div>
         <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
-          <p style="margin:0 0 16px">Dear <strong>${lawyerName}</strong>,</p>
+          <p style="margin:0 0 16px">Dear <strong>${safeName}</strong>,</p>
           <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
             Your HUMRI lawyer account has been suspended by the platform administration.
             You are no longer able to sign in to the lawyer portal until your account is reviewed and re-approved.
