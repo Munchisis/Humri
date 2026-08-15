@@ -3,8 +3,10 @@ import Image from "next/image";
 import { Scale, Users, FileText, ShieldCheck } from "lucide-react";
 
 export const metadata = {
-  title: "About HUMRI",
-  description: "HUMRI connects people who need legal help with volunteer lawyers.",
+  title:
+    "About HUMRI | Empowering Access to Free Legal Aid in Nigeria | Join as a Volunteer Lawyer | Pro Bono Network - HUMRI",
+  description:
+    "Discover how HUMRI leverages digital technology to bridge the justice gap in Nigeria by connecting people with qualified, independent volunteer lawyers. Get Free Legal Help in Nigeria | Apply for Pro Bono Aid - HUMRI",
 };
 
 export default function AboutPage() {

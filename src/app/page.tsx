@@ -1,12 +1,20 @@
 import Link from "next/link";
-import {
-  ShieldCheck,
-  ArrowRight,
-  Users,
-  Scale,
-} from "lucide-react";
+import { ShieldCheck, ArrowRight, Users, Scale } from "lucide-react";
 import { ThemeToggle } from "@/components/shared/themeToggle";
 import Image from "next/image";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Free Legal Aid & Pro Bono Lawyers in Nigeria | HUMRI",
+  description:
+    "Get connected with qualified Nigerian volunteer lawyers completely free. Submit your legal matter, track progress, or join our network today.",
+  openGraph: {
+    title: "Free Legal Aid & Pro Bono Lawyers in Nigeria | HUMRI",
+    description:
+      "Get connected with qualified Nigerian volunteer lawyers completely free. Submit your legal matter, track progress, or join our network today.",
+    images: ["/humri.png"],
+  },
+};
 
 export default function HomePage() {
   return (
@@ -231,7 +239,9 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
           <div className="flex flex-col  gap-2">
             <Image src="/humri.png" alt="HUMRI Logo" width={52} height={52} />
-            <span><strong>HUMRI</strong> ACCESS TO JUSTICE.</span>
+            <span>
+              <strong>HUMRI</strong> ACCESS TO JUSTICE.
+            </span>
           </div>
           <div className="flex flex-wrap justify-center gap-4">
             <Link

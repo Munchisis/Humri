@@ -8,9 +8,9 @@ import { Analytics } from "@vercel/analytics/next";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "HUMRI - Access To Justice",
+  title: "HUMRI | Free Pro Bono Legal Aid in Nigeria",
   description:
-    "Connect with qualified volunteer lawyers. Free, confidential legal help for everyone regardless of means.",
+    "Connect with verified volunteer lawyers in Nigeria. Submit your legal matter securely or join our network as a licensed attorney today.",
   other: {
     ...Sentry.getTraceData(),
   },

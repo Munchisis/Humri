@@ -5,6 +5,12 @@ import Link from "next/link";
 import { CheckCircle, AlertCircle, Loader2, Copy, Check } from "lucide-react";
 import Image from "next/image";
 
+export const metadata = {
+  title: "Submit a Legal Matter | Free Pro Bono Aid - HUMRI",
+  description:
+    "Facing a legal challenge? Securely submit your legal matter to HUMRI. We connect you with a verified volunteer lawyer in Nigeria within 72 hours, completely free.",
+};
+
 const MATTER_TYPES = [
   { value: "employment", label: "Employment dispute" },
   { value: "tenancy", label: "Tenancy / landlord" },

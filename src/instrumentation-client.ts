@@ -1,11 +1,16 @@
 // This file configures the initialization of Sentry on the client.
-// The added config here will be used whenever a users loads a page in their browser.
+// The added config here will be used whenever a user loads a page in their browser.
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
+//
+// This is the ONLY client-side Sentry config file in this project — do not
+// re-add sentry.client.config.ts. Having both caused "Multiple Sentry
+// Session Replay instances are not supported" at runtime, since each file
+// called Sentry.init() with its own replayIntegration().
 
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
-  dsn: "https://40d5290e2b4fbeff5722ba235360d9ad@o4511746117468160.ingest.us.sentry.io/4511746180186112",
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
   // Add optional integrations for additional features
   integrations: [
@@ -15,7 +20,8 @@ Sentry.init({
   ],
 
   // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+  tracesSampleRate: 0.1,
+
   // Enable logs to be sent to Sentry
   enableLogs: true,
 
