@@ -394,3 +394,57 @@ export async function sendLawyerSuspended({
     `,
   });
 }
+
+// ─── Matter assigned (to lawyer) ─────────────────────────────────────────────
+export async function sendLawyerMatterAssigned({
+  lawyerName,
+  lawyerEmail,
+  referenceNumber,
+  clientName,
+  matterType,
+  urgency,
+}: {
+  lawyerName: string;
+  lawyerEmail: string;
+  referenceNumber: string;
+  clientName: string;
+  matterType: string;
+  urgency: string;
+}) {
+  const safeLawyerName = escapeHtml(lawyerName);
+  const safeClientName = escapeHtml(clientName);
+  await send({
+    from: FROM,
+    to: lawyerEmail,
+    subject: `New matter assigned to you ${referenceNumber}${urgency === "critical" ? " ⚡ CRITICAL" : urgency === "urgent" ? " 🕐 Urgent" : ""}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+        <div style="background:#085041;padding:24px 32px;border-radius:12px 12px 0 0">
+          <h1 style="color:#E1F5EE;font-size:20px;margin:0">HUMRI</h1>
+          <p style="color:#9FE1CB;font-size:12px;margin:4px 0 0">Pro bono legal aid</p>
+        </div>
+        <div style="background:#ffffff;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
+          <p style="margin:0 0 16px">Dear <strong>${safeLawyerName}</strong>,</p>
+          <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
+            An admin has assigned a matter to you. Please review the details and reach out
+            to the client to arrange a consultation.
+          </p>
+          <table style="width:100%;border-collapse:collapse;margin:0 0 24px">
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;width:140px">Reference</td><td style="padding:8px 0;font-weight:500;font-family:monospace">${referenceNumber}</td></tr>
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Client</td><td style="padding:8px 0;font-weight:500">${safeClientName}</td></tr>
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Matter type</td><td style="padding:8px 0">${matterType}</td></tr>
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Urgency</td><td style="padding:8px 0;font-weight:500;color:${urgency === "critical" ? "#dc2626" : urgency === "urgent" ? "#d97706" : "#16a34a"}">${urgency.charAt(0).toUpperCase() + urgency.slice(1)}</td></tr>
+          </table>
+          <a href="${APP_URL}/lawyer/matters"
+            style="display:inline-block;background:#085041;color:#E1F5EE;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500;font-size:14px">
+            View matter →
+          </a>
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0">
+          <p style="margin:0;font-size:12px;color:#9ca3af">
+            This is an automated message from HUMRI. Please do not reply to this email.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}

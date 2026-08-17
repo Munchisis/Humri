@@ -8,6 +8,7 @@ import { authOptions } from "@/lib/auth";
 import {
   sendMatterCompleted,
   sendLawyerAssigned,
+  sendLawyerMatterAssigned,
   sendMatterStageUpdated,
 } from "@/lib/email";
 
@@ -167,6 +168,7 @@ export async function PATCH(
         );
       }
 
+      // Notify the client that a lawyer has been assigned
       try {
         await sendLawyerAssigned({
           clientName: `${matter.client.firstName} ${matter.client.lastName}`,
@@ -177,6 +179,28 @@ export async function PATCH(
         });
       } catch (err) {
         console.error("[PATCH email - assigned]", {
+          matterId: matter._id,
+          err,
+        });
+      }
+
+      // Notify the lawyer that they've been assigned a new matter
+      try {
+        const lawyerUser = await User.findById(assignedLawyer)
+          .select("email")
+          .lean();
+        if (lawyerUser?.email) {
+          await sendLawyerMatterAssigned({
+            lawyerName: newLawyer?.name ?? "Lawyer",
+            lawyerEmail: lawyerUser.email,
+            referenceNumber: matter.referenceNumber,
+            clientName: `${matter.client.firstName} ${matter.client.lastName}`,
+            matterType: matter.type,
+            urgency: matter.urgency,
+          });
+        }
+      } catch (err) {
+        console.error("[PATCH email - lawyer notified of assignment]", {
           matterId: matter._id,
           err,
         });
