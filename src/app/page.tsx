@@ -99,10 +99,10 @@ export default function HomePage() {
               Submit your matter <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
-              href="/track"
+              href="/auth/register"
               className="border border-white/30 text-white font-medium px-6 py-3 rounded-lg hover:bg-white/10 hover:border-white/60 transition-all duration-200"
             >
-              Track existing matter
+              Volunteer as a Lawyer
             </Link>
           </div>
         </div>
