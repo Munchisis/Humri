@@ -57,7 +57,7 @@ export default withSentryConfig(nextConfig, {
 
   org: "humri-ae",
 
-  project: "sentry-humri-village",
+  project: "sentry-humri",
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
