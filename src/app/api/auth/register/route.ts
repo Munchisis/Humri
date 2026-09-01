@@ -160,10 +160,19 @@ export async function POST(req: NextRequest) {
       emailVerifyExpires: verifyExpires,
     });
 
+    console.log(
+      "[REGISTER] User created:",
+      email,
+      "| Token hash saved (first 8 chars):",
+      verifyTokenHash.substring(0, 8) + "... | Expires:",
+      verifyExpires,
+    );
+
     // Send verification email — non-blocking, doesn't gate admin approval.
     // The raw (unhashed) token goes in the link; only the hash lives in the DB.
     try {
       await sendEmailVerification({ name, email, token: verifyToken });
+      console.log("[REGISTER] Verification email sent to:", email);
     } catch (err) {
       console.error("[REGISTER] verification email failed:", err);
       // don't fail registration if email fails
