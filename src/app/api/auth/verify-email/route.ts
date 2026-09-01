@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import crypto from "crypto";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 
@@ -21,8 +22,14 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
+    // Hash the incoming token to match the hash stored in the database
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(parsed.data.token)
+      .digest("hex");
+
     const user = await User.findOne({
-      emailVerifyToken: parsed.data.token,
+      emailVerifyToken: tokenHash,
       emailVerifyExpires: { $gt: new Date() },
     });
 
