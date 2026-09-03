@@ -11,6 +11,35 @@ export const metadata: Metadata = {
   title: "HUMRI | Free Pro Bono Legal Aid in Nigeria",
   description:
     "Connect with verified volunteer lawyers in Nigeria. Submit your legal matter securely or join our network as a licensed attorney today.",
+  openGraph: {
+    title: "HUMRI | Free Pro Bono Legal Aid in Nigeria",
+    description:
+      "Connect with verified volunteer lawyers in Nigeria. Submit your legal matter securely or join our network as a licensed attorney today.",
+    url: "https://humri.org",
+    siteName: "HUMRI",
+    locale: "en_NG",
+    type: "website",
+    images: [
+      {
+        url: "/humri.png",
+        width: 526,
+        height: 426,
+        alt: "HUMRI",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "HUMRI | Free Pro Bono Legal Aid in Nigeria",
+    description:
+      "Connect with verified volunteer lawyers in Nigeria. Submit your legal matter securely or join our network as a licensed attorney today.",
+    images: ["/humri.png"],
+  },
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   other: {
     ...Sentry.getTraceData(),
   },
