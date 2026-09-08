@@ -208,7 +208,7 @@ export default function SubmitForm() {
   return (
     <div className="min-h-screen bg-gray-50  dark:bg-gray-900">
       <header className="bg-brand-900 px-6 py-4 flex items-center justify-between  dark:bg-gray-800">
-        <Link href="/" className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <Link
             href="/"
             className="w-10 h-10 dark:shadow-inner dark:shadow-brand-100 rounded-full flex items-center justify-center shrink-0"
@@ -218,7 +218,7 @@ export default function SubmitForm() {
           <Link href="/" className="text-sm font-semibold text-brand-50">
             HUMRI
           </Link>
-        </Link>
+        </div>
         <Link
           href="/track"
           className="text-sm text-gray-300 hover:text-brand-50"

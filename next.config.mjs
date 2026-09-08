@@ -19,6 +19,9 @@ const cspHeader = `
 
 const nextConfig = {
   reactStrictMode: true,
+  images: {
+    formats: ["image/avif", "image/webp"],
+  },
   serverExternalPackages: ["mongoose"],
   eslint: {
     // Allows production builds to successfully complete even if lint errors exist
