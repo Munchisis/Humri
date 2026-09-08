@@ -21,7 +21,10 @@ function hasRole(session: any, role: string): boolean {
   return roles.includes(role);
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { id } = await params;
   {
     try {
@@ -49,7 +52,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         .select("isActive name specialisation")
         .lean();
 
-      if (!lawyerUser?.isActive) {
+      if (!lawyerUser) {
+        return NextResponse.json(
+          { error: "Lawyer account not found." },
+          { status: 404 },
+        );
+      }
+
+      const isLawyerActive = lawyerUser.isActive ?? true;
+
+      if (!isLawyerActive) {
         return NextResponse.json(
           {
             error:
@@ -92,7 +104,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       const updatedMatter = await Matter.findOneAndUpdate(
         {
           _id: id,
-          $or: [{ assignedLawyer: { $exists: false } }, { assignedLawyer: null }],
+          $or: [
+            { assignedLawyer: { $exists: false } },
+            { assignedLawyer: null },
+          ],
         },
         {
           $set: {

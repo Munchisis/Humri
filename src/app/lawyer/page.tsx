@@ -99,8 +99,14 @@ export default async function LawyerDashboard() {
           </div>
 
           {active.length === 0 ? (
-            <div className="text-center py-8 text-sm text-gray-400">
+            <div className="flex flex-col items-center gap-10 text-center py-8 text-sm text-gray-400">
               No active matters assigned to you.
+              <Link
+                href="/lawyer/pool"
+                className="inline-flex items-center gap-2 w-fit bg-brand-600 text-white font-medium px-6 py-3 rounded-lg hover:bg-brand-800 hover:border-white/60 transition-all duration-200"
+              >
+                Click to choose a matter <ArrowRight className="w-3 h-3" />
+              </Link>
             </div>
           ) : (
             <div className="space-y-3">
