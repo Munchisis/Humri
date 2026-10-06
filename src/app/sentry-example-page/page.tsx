@@ -53,7 +53,7 @@ export default function Page() {
           <a
             target="_blank"
             rel="noopener"
-            href="https://humri-ae.sentry.io/issues/?project=4512005484052480"
+            href="https://humri-ee.sentry.io/issues/?project=4512205793329232"
           >
             Issues Page
           </a>

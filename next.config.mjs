@@ -1,4 +1,4 @@
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 /** @type {import('next').NextConfig} */
 
@@ -58,9 +58,9 @@ export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
-  org: "humri-ae",
+  org: "humri-ee",
 
-  project: "sentry-humri",
+  project: "nextjs",
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
