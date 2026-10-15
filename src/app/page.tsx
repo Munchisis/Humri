@@ -143,7 +143,7 @@ export default function HomePage() {
             {
               step: "02",
               title: "Get matched to a lawyer",
-              desc: "Our team reviews your submission and assigns a qualified lawyer within 72 hours.",
+              desc: "Our team reviews your submission and assigns a qualified lawyer within time.",
             },
             {
               step: "03",
