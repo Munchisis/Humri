@@ -67,10 +67,10 @@ export default function HomePage() {
       </nav>
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-950 via-brand-900 to-emerald-800 text-white dark:from-gray-950 dark:via-gray-900 dark:to-emerald-950">
+      <section className="relative overflow-hidden bg-linear-to-br from-emerald-950 via-brand-900 to-emerald-800 text-white dark:from-gray-950 dark:via-gray-900 dark:to-emerald-950">
         {/* Watermark icon — signature element */}
         <Scale
-          className="absolute -right-10 -top-10 w-72 h-72 text-white/[0.06] rotate-[12deg] pointer-events-none select-none"
+          className="absolute -right-10 -top-10 w-72 h-72 text-white/6 rotate-12 pointer-events-none select-none"
           strokeWidth={1}
           aria-hidden="true"
         />
@@ -208,7 +208,7 @@ export default function HomePage() {
 
       {/* Lawyer CTA */}
       <section className="max-w-5xl mx-auto px-4 py-20">
-        <div className=" bg-gradient-to-br from-green-950 via-green-800 to-brand-800 rounded-2xl p-10 flex flex-col md:flex-row items-center justify-between gap-6 dark:from-gray-950 dark:via-gray-900 dark:to-emerald-950">
+        <div className=" bg-linear-to-br from-green-950 via-green-800 to-brand-800 rounded-2xl p-10 flex flex-col md:flex-row items-center justify-between gap-6 dark:from-gray-950 dark:via-gray-900 dark:to-emerald-950">
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Users className="w-5 h-5 text-white/70" />
@@ -219,7 +219,7 @@ export default function HomePage() {
             <h2 className="text-2xl font-medium text-white mb-2">
               Volunteer your expertise
             </h2>
-            <p className="text-brand-200 text-sm max-w-md leading-relaxed">
+            <p className="text-gray-300 text-sm max-w-md leading-relaxed">
               Join our growing network of Nigerian lawyers giving back through
               pro bono work. Cases are matched to your specialisation and
               managed through a clean dashboard.

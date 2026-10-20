@@ -8,6 +8,7 @@ import { generateReferenceNumber } from "@/lib/utils";
 import mongoose from "mongoose";
 import { sendMatterSubmitted, sendAdminNewMatter } from "@/lib/email";
 import User from "@/models/User";
+import { MATTER_REFERRAL_SOURCE_VALUES } from "@/types";
 
 // ─── Submit a matter (public — no auth required) ──────────────────────────────
 
@@ -30,6 +31,7 @@ const SubmitSchema = z.object({
     "immigration",
     "other",
   ]),
+  referralSource: z.enum(MATTER_REFERRAL_SOURCE_VALUES),
   description: z
     .string()
     .min(
@@ -59,6 +61,7 @@ export async function POST(req: NextRequest) {
       state,
       preferredLanguage,
       type,
+      referralSource,
       description,
       urgency,
     } = parsed.data;
@@ -77,6 +80,7 @@ export async function POST(req: NextRequest) {
       referenceNumber,
       client: { firstName, lastName, email, phone, state, preferredLanguage },
       type,
+      referralSource,
       description,
       urgency,
       status: "unassigned",

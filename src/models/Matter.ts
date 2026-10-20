@@ -1,9 +1,11 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import { MATTER_REFERRAL_SOURCE_VALUES } from "@/types";
 import type {
   MatterStatus,
   MatterUrgency,
   MatterStage,
   MatterType,
+  MatterReferralSource,
   IClient,
 } from "@/types";
 
@@ -11,6 +13,7 @@ export interface IMatterDocument extends Document {
   referenceNumber: string;
   client: IClient;
   type: MatterType;
+  referralSource?: MatterReferralSource;
   description: string;
   urgency: MatterUrgency;
   status: MatterStatus;
@@ -72,6 +75,10 @@ const MatterSchema = new Schema<IMatterDocument>(
         "debt", "immigration", "other",
       ],
       required: true,
+    },
+    referralSource: {
+      type: String,
+      enum: MATTER_REFERRAL_SOURCE_VALUES,
     },
     description:             { type: String, required: true, maxlength: 2000 },
     urgency:                 { type: String, enum: ["normal", "urgent", "critical"], default: "normal" },

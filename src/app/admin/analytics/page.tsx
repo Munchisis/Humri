@@ -23,6 +23,7 @@ interface Analytics {
     completionRate: number;
   };
   byType: { label: string; count: number; pct: number }[];
+  byReferralSource: { label: string; count: number; pct: number }[];
   byUrgency: { label: string; count: number }[];
   byState: { state: string; count: number }[];
   monthlyTrend: { month: string; submitted: number; completed: number }[];
@@ -297,6 +298,42 @@ export default function AnalyticsPage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Referral Sources */}
+      <div className="card mb-5">
+        <h2 className="text-base font-medium mb-1">
+          How people found HUMRI
+        </h2>
+        <p className="text-xs text-gray-400 mb-5">
+          Distribution of captured referral responses
+        </p>
+        {data.byReferralSource.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-6">
+            No referral responses have been collected yet.
+          </p>
+        ) : (
+          <div className="grid sm:grid-cols-2 gap-x-6 gap-y-4">
+            {data.byReferralSource.map((source) => (
+              <div key={source.label}>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {source.label}
+                  </span>
+                  <span className="text-gray-400">
+                    {source.count} ({source.pct}%)
+                  </span>
+                </div>
+                <div className="bg-gray-100 dark:bg-gray-800 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-2 rounded-full bg-brand-500 transition-all"
+                    style={{ width: `${source.pct}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* NEW INSIGHTS SECTION */}

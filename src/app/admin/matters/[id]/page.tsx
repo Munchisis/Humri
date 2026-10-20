@@ -37,6 +37,7 @@ interface MatterDetail {
     preferredLanguage?: string;
   };
   type: string;
+  referralSource?: string;
   description: string;
   urgency: string;
   status: string;
@@ -226,6 +227,18 @@ export default function AdminMatterDetailPage() {
                   </p>
                 </div>
               )}
+              <div>
+                <p className="text-xs text-gray-400 mb-0.5">
+                  How they heard about us
+                </p>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  {matter.referralSource
+                    ? matter.referralSource
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (letter) => letter.toUpperCase())
+                    : "Not provided"}
+                </p>
+              </div>
               <div>
                 <p className="text-xs text-gray-400 mb-0.5">Submitted</p>
                 <p className="text-sm text-gray-700 dark:text-gray-300">

@@ -4,6 +4,11 @@ import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Matter from "@/models/Matter";
 import User from "@/models/User";
+import { MATTER_REFERRAL_SOURCE_VALUES } from "@/types";
+import {
+  MATTER_REFERRAL_SOURCE_LABELS,
+  type MatterReferralSource,
+} from "@/types";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -31,6 +36,7 @@ export async function GET() {
 
     // Aggregations
     byType,
+    byReferralSource,
     byUrgency,
     byState,
     byStatus,
@@ -66,6 +72,13 @@ export async function GET() {
     // Breakdown by type
     Matter.aggregate([
       { $group: { _id: "$type", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]),
+
+    // Breakdown by referral source
+    Matter.aggregate([
+      { $match: { referralSource: { $in: MATTER_REFERRAL_SOURCE_VALUES } } },
+      { $group: { _id: "$referralSource", count: { $sum: 1 } } },
       { $sort: { count: -1 } },
     ]),
 
@@ -243,6 +256,20 @@ export async function GET() {
     pct: totalMatters ? Math.round((t.count / totalMatters) * 100) : 0,
   }));
 
+  const referralSourceResponses = byReferralSource.reduce(
+    (total: number, source: { count: number }) => total + source.count,
+    0,
+  );
+  const formattedByReferralSource = byReferralSource.map(
+    (source: { _id: MatterReferralSource; count: number }) => ({
+      label: MATTER_REFERRAL_SOURCE_LABELS[source._id],
+      count: source.count,
+      pct: referralSourceResponses
+        ? Math.round((source.count / referralSourceResponses) * 100)
+        : 0,
+    }),
+  );
+
   return NextResponse.json({
     overview: {
       total: totalMatters,
@@ -259,6 +286,7 @@ export async function GET() {
       inactive: archiveInactive,
     },
     byType: formattedByType,
+    byReferralSource: formattedByReferralSource,
     byUrgency: byUrgency.map((u: { _id: string; count: number }) => ({
       label: u._id,
       count: u.count,

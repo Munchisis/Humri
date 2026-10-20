@@ -80,6 +80,34 @@ export type MatterType =
   | "immigration"
   | "other";
 
+export const MATTER_REFERRAL_SOURCE_VALUES = [
+  "search_engine",
+  "social_media",
+  "friend_or_family",
+  "lawyer_or_legal_aid",
+  "community_organization",
+  "event_or_outreach",
+  "news_or_media",
+  "other",
+] as const;
+
+export type MatterReferralSource =
+  (typeof MATTER_REFERRAL_SOURCE_VALUES)[number];
+
+export const MATTER_REFERRAL_SOURCE_LABELS: Record<
+  MatterReferralSource,
+  string
+> = {
+  search_engine: "Google or another search engine",
+  social_media: "Social media",
+  friend_or_family: "A friend or family member",
+  lawyer_or_legal_aid: "A lawyer or legal aid service",
+  community_organization: "A community organization",
+  event_or_outreach: "An event or outreach programme",
+  news_or_media: "News or other media",
+  other: "Other",
+};
+
 export interface IClient {
   firstName: string;
   lastName: string;
@@ -94,6 +122,7 @@ export interface IMatter {
   referenceNumber: string;       // e.g. LG-2026-00847 — given to client
   client: IClient;
   type: MatterType;
+  referralSource?: MatterReferralSource;
   description: string;
   urgency: MatterUrgency;
   status: MatterStatus;

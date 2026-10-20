@@ -4,6 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { CheckCircle, AlertCircle, Loader2, Copy, Check } from "lucide-react";
 import Image from "next/image";
+import {
+  MATTER_REFERRAL_SOURCE_VALUES,
+  MATTER_REFERRAL_SOURCE_LABELS,
+  type MatterReferralSource,
+} from "@/types";
 
 const MATTER_TYPES = [
   { value: "employment", label: "Employment dispute" },
@@ -73,6 +78,7 @@ export default function SubmitForm() {
     state: "",
     preferredLanguage: "English",
     type: "",
+    referralSource: "" as MatterReferralSource | "",
     description: "",
     urgency: "normal" as Urgency,
   });
@@ -114,6 +120,7 @@ export default function SubmitForm() {
     form.email.trim() !== "" &&
     form.state !== "" &&
     form.type !== "" &&
+    form.referralSource !== "" &&
     form.description.trim().length >= 20 &&
     hasConsented;
   async function handleSubmit(e: React.FormEvent) {
@@ -121,6 +128,11 @@ export default function SubmitForm() {
     setError("");
     if (!form.type) {
       setError("Please select a matter type.");
+      return;
+    }
+
+    if (!form.referralSource) {
+      setError("Please tell us how you heard about HUMRI.");
       return;
     }
 
@@ -321,6 +333,26 @@ export default function SubmitForm() {
                 >
                   {["English", "Yoruba", "Igbo", "Hausa", "Pidgin"].map((l) => (
                     <option key={l}>{l}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="label" htmlFor="referral-source">
+                  How did you hear about us?{" "}
+                  <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="referral-source"
+                  className="input"
+                  required
+                  value={form.referralSource}
+                  onChange={(e) => update("referralSource", e.target.value)}
+                >
+                  <option value="">Select an option...</option>
+                  {MATTER_REFERRAL_SOURCE_VALUES.map((source) => (
+                    <option key={source} value={source}>
+                      {MATTER_REFERRAL_SOURCE_LABELS[source]}
+                    </option>
                   ))}
                 </select>
               </div>
