@@ -53,7 +53,7 @@ export function AdminSidebar({ user }: Props) {
   }, []);
 
   return (
-    <aside className="w-60 shrink-0 bg-gradient-to-br from-brand-900 via-brand-600 to-brand-800 flex flex-col min-h-screen dark:from-gray-900 dark:via-slate-800 dark:to-gray-800">
+    <aside className="w-60 shrink-0 bg-linear-to-br from-green-900 via-brand-600 to-brand-800 flex flex-col min-h-screen dark:from-gray-900 dark:via-slate-800 dark:to-gray-800">
       <div className="flex items-center gap-3 px-5 py-5 border-b border-brand-800 shadow-lg">
         <Link
           href="/"
@@ -64,7 +64,7 @@ export function AdminSidebar({ user }: Props) {
         <div>
           <Link
             href="/"
-            className="text-sm font-semibold text-brand-50 leading-none"
+            className="text-sm font-semibold text-gray-50 leading-none"
           >
             HUMRI
           </Link>

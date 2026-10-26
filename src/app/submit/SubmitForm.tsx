@@ -122,6 +122,7 @@ export default function SubmitForm() {
     form.type !== "" &&
     form.referralSource !== "" &&
     form.description.trim().length >= 20 &&
+    form.description.length <= 2000 &&
     hasConsented;
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -140,6 +141,11 @@ export default function SubmitForm() {
       setError(
         "Please describe your matter in more detail (at least 20 characters).",
       );
+      return;
+    }
+
+    if (form.description.length > 2000) {
+      setError("Please keep your description to 2000 characters or fewer.");
       return;
     }
 
@@ -393,6 +399,7 @@ export default function SubmitForm() {
                 className="input min-h-[120px]"
                 placeholder="Explain what happened, who is involved, and what outcome you are seeking..."
                 value={form.description}
+                maxLength={2000}
                 onChange={(e) => update("description", e.target.value)}
               />
               <p className="text-xs text-gray-400 mt-1">

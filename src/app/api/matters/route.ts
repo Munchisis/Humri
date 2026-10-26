@@ -37,7 +37,8 @@ const SubmitSchema = z.object({
     .min(
       20,
       "Please describe your matter in more detail (at least 20 characters)",
-    ),
+    )
+    .max(2000, "Please keep your description to 2000 characters or fewer"),
   urgency: z.enum(["normal", "urgent", "critical"]).default("normal"),
 });
 
