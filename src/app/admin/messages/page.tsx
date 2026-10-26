@@ -29,6 +29,7 @@ export default function AdminMessagesPage() {
   const [reply, setReply]           = useState("");
   const [replying, setReplying]     = useState(false);
   const [deleting, setDeleting]     = useState<string | null>(null);
+  const [actionError, setActionError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -43,34 +44,69 @@ export default function AdminMessagesPage() {
   useEffect(() => { load(); }, [load]);
 
   async function openMessage(msg: Message) {
+    setActionError("");
     setSelected(msg);
     setReply(msg.adminReply ?? "");
 
     // Mark as read if unread
     if (msg.status === "unread") {
-      await fetch(`/api/messages/${msg._id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reply: msg.adminReply ?? "", status: "read" }),
-      });
-      setMessages((prev) =>
-        prev.map((m) => m._id === msg._id ? { ...m, status: "read" } : m)
-      );
+      try {
+        const res = await fetch(`/api/messages/${msg._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "read" }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setActionError(data.error ?? "Failed to mark the message as read.");
+          return;
+        }
+        setSelected((current) =>
+          current?._id === msg._id ? { ...current, status: "read" } : current,
+        );
+        setMessages((prev) =>
+          prev.map((m) => m._id === msg._id ? { ...m, status: "read" } : m)
+        );
+      } catch {
+        setActionError("Failed to mark the message as read. Please try again.");
+      }
     }
   }
 
   async function sendReply() {
     if (!selected || reply.trim().length < 5) return;
+    setActionError("");
     setReplying(true);
-    await fetch(`/api/messages/${selected._id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reply, status: "resolved" }),
-    });
-    setReplying(false);
-    setSelected(null);
-    setReply("");
-    load();
+    try {
+      const res = await fetch(`/api/messages/${selected._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reply, status: "resolved" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setActionError(data.error ?? "Failed to send your reply.");
+        return;
+      }
+
+      const updatedMessage = {
+        ...selected,
+        adminReply: reply,
+        repliedAt: new Date().toISOString(),
+        status: "resolved" as const,
+      };
+      setSelected(updatedMessage);
+      setMessages((prev) =>
+        prev.map((message) =>
+          message._id === selected._id ? updatedMessage : message,
+        ),
+      );
+      setReply(reply);
+    } catch {
+      setActionError("Failed to send your reply. Please try again.");
+    } finally {
+      setReplying(false);
+    }
   }
 
   async function markResolved(id: string) {
@@ -217,6 +253,11 @@ export default function AdminMessagesPage() {
             )}
 
             {/* Reply box */}
+            {actionError && (
+              <p role="alert" className="text-sm text-red-600 dark:text-red-400 mb-3">
+                {actionError}
+              </p>
+            )}
             {selected.status !== "resolved" || selected.adminReply ? (
               <>
                 <label className="label">
